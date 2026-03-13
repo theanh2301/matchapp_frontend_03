@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:learn_math_app_03/screens/practice/practice_list_screen.dart';
 import '../../theme/app_colors.dart';
-import 'quiz_screen.dart'; // Import màn hình Quiz
+import 'exam_screen.dart'; // Import màn hình Quiz
 
 class PracticeScreen extends StatelessWidget {
   const PracticeScreen({super.key});
@@ -20,7 +21,6 @@ class PracticeScreen extends StatelessWidget {
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: AppColors.purple,
-                // Bo 2 góc bên dưới giống với các tab khác (ví dụ HomeScreen)
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -32,7 +32,6 @@ class PracticeScreen extends StatelessWidget {
                 right: 24,
                 bottom: 40,
               ),
-              // Tăng padding bottom lên 40 để có chỗ bo cong
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -54,11 +53,10 @@ class PracticeScreen extends StatelessWidget {
             ),
 
             // ==========================================
-            // 2. CÁC THẺ BÀI TẬP
+            // 2. CÁC THẺ BÀI TẬP (ĐÃ CẬP NHẬT GIAO DIỆN)
             // ==========================================
             Transform.translate(
               offset: const Offset(0, -20),
-              // Kéo khối này lên trên 20px để tạo hiệu ứng đè
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
@@ -66,14 +64,13 @@ class PracticeScreen extends StatelessWidget {
                   children: [
                     _buildChallengeCard(
                       context: context,
-                      icon: Icons.bolt,
+                      icon: Icons.calendar_today, // Đổi icon thành cái lịch
                       iconBgColor: AppColors.orange,
-                      title: "Thử thách hàng ngày",
-                      subtitle: "5 câu hỏi nhanh",
-                      time: "3 phút",
-                      xp: "+50 XP",
-                      badgeText: "Dễ",
-                      badgeColor: AppColors.green,
+                      title: "Luyện theo ngày",
+                      subtitle: "Học đều đặn mỗi ngày để tiến bộ",
+                      progressText: "2/30 đề hoàn thành",
+                      progressValue: 0.07, // 7%
+                      themeColor: AppColors.orange,
                     ),
                     const SizedBox(height: 16),
                     _buildChallengeCard(
@@ -81,23 +78,21 @@ class PracticeScreen extends StatelessWidget {
                       icon: Icons.adjust,
                       iconBgColor: AppColors.primary,
                       title: "Luyện theo chủ đề",
-                      subtitle: "Đại số - Phương trình",
-                      time: "10 phút",
-                      xp: "+100 XP",
-                      badgeText: "Trung bình",
-                      badgeColor: AppColors.primary,
+                      subtitle: "Rèn luyện chuyên sâu từng chủ đề",
+                      progressText: "1/15 đề hoàn thành",
+                      progressValue: 0.07, // 7%
+                      themeColor: AppColors.primary,
                     ),
                     const SizedBox(height: 16),
                     _buildChallengeCard(
                       context: context,
                       icon: Icons.emoji_events,
                       iconBgColor: AppColors.purple,
-                      title: "Thách thức khó",
-                      subtitle: "Đề thi Olympic",
-                      time: "20 phút",
-                      xp: "+200 XP",
-                      badgeText: "Khó",
-                      badgeColor: AppColors.purple,
+                      title: "Thử thách",
+                      subtitle: "Thách thức bản thân với các đề khó",
+                      progressText: "1/10 đề hoàn thành",
+                      progressValue: 0.10, // 10%
+                      themeColor: AppColors.purple,
                     ),
 
                     const SizedBox(height: 32),
@@ -109,7 +104,7 @@ class PracticeScreen extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.trending_up,
-                          color: AppColors.purple, // Đổi sang màu tím theo mẫu
+                          color: AppColors.purple,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
@@ -132,7 +127,7 @@ class PracticeScreen extends StatelessWidget {
                           "82%",
                           AppColors.primary,
                         ),
-                        const SizedBox(height: 12), // Khoảng cách giữa các thẻ
+                        const SizedBox(height: 12),
                         _buildSubjectProgressCard(
                           "Hình học",
                           0.60,
@@ -274,130 +269,140 @@ class PracticeScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGET CON: Thẻ thử thách (Click để vào Quiz) ---
+  // --- CẬP NHẬT LỚN: WIDGET CON Thẻ thử thách ---
   Widget _buildChallengeCard({
     required BuildContext context,
     required IconData icon,
     required Color iconBgColor,
     required String title,
     required String subtitle,
-    required String time,
-    required String xp,
-    required String badgeText,
-    required Color badgeColor,
+    required String progressText, // Ví dụ: "2/30 đề hoàn thành"
+    required double progressValue, // Ví dụ: 0.07 (tức là 7%)
+    required Color themeColor,
   }) {
-    return Material(
-      color: AppColors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          // Chuyển sang màn hình Trắc nghiệm
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => QuizScreen(title: title)),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade200),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: iconBgColor,
-                  borderRadius: BorderRadius.circular(12),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(20), // Tăng độ bo góc cho mượt
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04), // Đổ bóng nhẹ
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            // Chuyển sang màn hình Danh sách (PracticeListScreen)
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PracticeListScreen(
+                  title: title,
+                  subtitle: subtitle,
+                  themeColor: themeColor,
+                  headerIcon: icon,
                 ),
-                child: Icon(icon, color: AppColors.white, size: 28),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20.0), // Padding đều 20px
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. ICON LỚN BÊN TRÁI
+                Container(
+                  width: 64, // Tăng kích thước khung icon theo thiết kế
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: iconBgColor, // Có thể dùng gradient nếu AppColors có
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, color: AppColors.white, size: 32),
+                ),
+                const SizedBox(width: 16),
+
+                // 2. NỘI DUNG CHÍNH (Tiêu đề, Phụ đề, Tiến trình)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Tiêu đề & Mũi tên
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Icon(Icons.chevron_right, color: Colors.grey.shade400),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 13,
+                      const SizedBox(height: 6),
+
+                      // Phụ đề (Subtitle)
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 14,
-                          color: Colors.grey.shade500,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          time,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Icon(
-                          Icons.star,
-                          size: 14,
-                          color: AppColors.orange,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          xp,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.orange,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: badgeColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            badgeText,
+                      const SizedBox(height: 16),
+
+                      // Thanh Text hiển thị tiến trình
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            progressText,
                             style: TextStyle(
-                              color: badgeColor,
-                              fontSize: 10,
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            "${(progressValue * 100).toInt()}%",
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black87,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Thanh màu chạy ngang (LinearProgressIndicator)
+                      LinearProgressIndicator(
+                        value: progressValue,
+                        backgroundColor: Colors.grey.shade200,
+                        color: themeColor, // Màu chạy tiến độ lấy theo theme của thẻ
+                        minHeight: 6,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // --- WIDGET CON: Thanh tiến độ môn học ---
+  // --- WIDGET CON: Thanh tiến độ môn học (Giữ nguyên) ---
   Widget _buildSubjectProgressCard(
       String title,
       double progress,
@@ -409,10 +414,10 @@ class PracticeScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(16), // Bo góc cho từng thẻ
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04), // Viền mờ nhẹ
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
@@ -436,10 +441,10 @@ class PracticeScreen extends StatelessWidget {
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: Colors.grey.shade200, // Màu nền của thanh
-            color: color, // Màu chạy tiến độ
-            minHeight: 8, // Tăng độ dày lên chút cho giống thiết kế
-            borderRadius: BorderRadius.circular(10), // Bo tròn thanh
+            backgroundColor: Colors.grey.shade200,
+            color: color,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(10),
           ),
           const SizedBox(height: 12),
           Row(
@@ -455,7 +460,7 @@ class PracticeScreen extends StatelessWidget {
                   Text(
                     accuracy,
                     style: TextStyle(
-                      color: color, // Đổi màu độ chính xác theo màu chủ đề (Cam cho lượng giác, Xanh cho hình, ...)
+                      color: color,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -469,7 +474,7 @@ class PracticeScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGET CON: Thẻ Lỗi cần ôn lại ---
+  // --- WIDGET CON: Thẻ Lỗi cần ôn lại (Giữ nguyên) ---
   Widget _buildMistakeCard({
     required String tag,
     required String question,

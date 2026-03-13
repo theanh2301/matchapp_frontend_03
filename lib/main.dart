@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:learn_math_app_03/screens/main_screen.dart';
+import 'package:learn_math_app_03/screens/splash/splash_screen.dart';
 
 import 'theme/app_colors.dart';
 

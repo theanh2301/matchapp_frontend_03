@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:learn_math_app_03/screens/learn/game/flash_card.dart';
+import 'package:learn_math_app_03/screens/learn/game/match_card.dart';
+import 'package:learn_math_app_03/screens/learn/game/quiz_card.dart';
 import '../../theme/app_colors.dart';
 
 class LessonListScreen extends StatefulWidget {
@@ -61,13 +64,27 @@ class _LessonListScreenState extends State<LessonListScreen> {
   }
 
   void _playGame(int lessonIndex, String gameType, String gameName) async {
+    dynamic destination;
+
+    switch (gameType) {
+      case "flashcardsCompleted":
+        destination = const FlashcardGameScreen();
+        break;
+
+      case "interactiveCompleted":
+        destination = const QuizGameScreen();
+
+      default:
+        destination = const MatchCardGameScreen();
+    }
+
+    // Thực hiện chuyển màn hình
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => MockGameScreen(gameName: gameName, themeColor: widget.themeColor),
-      ),
+      MaterialPageRoute(builder: (context) => destination),
     );
 
+    // Cập nhật trạng thái hoàn thành nếu chơi xong
     if (result == true) {
       setState(() {
         lessons[lessonIndex][gameType] = true;

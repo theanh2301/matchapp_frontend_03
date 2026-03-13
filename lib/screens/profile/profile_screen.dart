@@ -103,7 +103,7 @@ class ProfileScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 24),
-
+/*
             // ==========================================
             // 3. MỤC TIÊU HỌC TẬP
             // ==========================================
@@ -144,7 +144,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 24),*/
 
             // ==========================================
             // 4. DANH SÁCH MENU (Cài đặt, Thông báo...)
