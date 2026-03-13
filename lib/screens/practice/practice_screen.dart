@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:learn_math_app_03/screens/practice/practice_list_screen.dart';
 import '../../theme/app_colors.dart';
-import 'exam_screen.dart'; // Import màn hình Quiz
 
 class PracticeScreen extends StatelessWidget {
   const PracticeScreen({super.key});

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:learn_math_app_03/screens/practice/exam_screen.dart';
 import '../../theme/app_colors.dart';
-import '../learn/game/quiz_card.dart';
-// import 'exam_screen.dart'; // Bạn import màn hình Quiz thực tế của bạn vào đây
 
 // MÔ HÌNH DỮ LIỆU BÀI TẬP
 class PracticeItem {

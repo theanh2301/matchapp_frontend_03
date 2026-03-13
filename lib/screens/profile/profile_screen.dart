@@ -315,7 +315,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // Dòng mục tiêu học tập (Trái: Nhãn, Phải: Giá trị)
+ /* // Dòng mục tiêu học tập (Trái: Nhãn, Phải: Giá trị)
   Widget _buildGoalRow(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -324,7 +324,7 @@ class ProfileScreen extends StatelessWidget {
         Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
       ],
     );
-  }
+  }*/
 
   // Nút bấm Menu dạng danh sách
   Widget _buildMenuButton({required IconData icon, required Color iconColor, required String title, String? trailingText}) {
