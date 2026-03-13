@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Xin chào, Minh! 👋",
+                          "Xin chào, Thế Anh! 👋",
                           style: TextStyle(
                             color: AppColors.white,
                             fontSize: 24,
@@ -147,7 +147,7 @@ class HomeScreen extends StatelessWidget {
           // ==========================================
           Container(
             color: AppColors.bgLight,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -155,57 +155,78 @@ class HomeScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.white,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
-                      const Row(
+                      // Header: Icon Cúp + Tiêu đề + Badge tỷ lệ
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Row(
                             children: [
-                              Icon(
-                                Icons.track_changes,
-                                color: AppColors.primary,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                "Mục tiêu hôm nay",
+                              const Icon(Icons.emoji_events, color: Color(0xFFE64A19), size: 24), // Cúp màu cam đậm
+                              const SizedBox(width: 8),
+                              const Text(
+                                "Thử thách hàng ngày",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ],
                           ),
-                          Text(
-                            "3/5 bài",
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
+                          // Badge 2/3 hoàn thành
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              "2/3 hoàn thành",
+                              style: TextStyle(
+                                color: Color(0xFFE64A19),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      LinearProgressIndicator(
-                        value: 0.6,
-                        backgroundColor: Colors.grey.shade200,
-                        color: AppColors.primary,
-                        minHeight: 8,
-                        borderRadius: BorderRadius.circular(10),
+                      const SizedBox(height: 34),
+
+                      // Danh sách các Task bên trong
+                      _buildDailyTaskItem(
+                        title: "Hoàn thành 3 bài Flashcard",
+                        xp: "+50 XP",
+                        isCompleted: true,
                       ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        "Còn 2 bài nữa để hoàn thành mục tiêu!",
-                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                      const SizedBox(height: 20),
+                      _buildDailyTaskItem(
+                        title: "Đạt 80% độ chính xác",
+                        xp: "+30 XP",
+                        isCompleted: true,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildDailyTaskItem(
+                        title: "Luyện tập 30 phút",
+                        xp: "+40 XP",
+                        isCompleted: false, // Cái cuối cùng chưa làm nên màu xám
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-
+                SizedBox(height: 24,),
                 // 2 Nút Hành động nhanh
                 Row(
                   children: [
@@ -358,6 +379,51 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // --- WIDGET CON: Dòng nhiệm vụ Thử thách hàng ngày ---
+  Widget _buildDailyTaskItem({
+    required String title,
+    required String xp,
+    required bool isCompleted,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Icon đổi màu dựa trên trạng thái
+        Icon(
+          isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+          color: isCompleted ? Colors.green : Colors.grey.shade300,
+          size: 24,
+        ),
+        const SizedBox(width: 12),
+        // Nội dung chữ
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  // Chữ xám mờ nếu chưa hoàn thành
+                  color: isCompleted ? Colors.black87 : Colors.grey.shade500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                xp,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
