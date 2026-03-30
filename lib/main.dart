@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:learn_math_app_03/screens/main_screen.dart';
+import 'package:learn_math_app_03/ui/screens/home/home_screen.dart';
+import 'package:learn_math_app_03/ui/screens/main_screen.dart';
+import 'package:learn_math_app_03/ui/screens/splash/splash_screen.dart';
 
-import 'theme/app_colors.dart';
+import 'core/theme/app_colors.dart';
+
 
 void main() {
-  // Chạy ứng dụng
   runApp(const MyApp());
 }
 
@@ -14,12 +16,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MathJoy', // Tên ứng dụng của bạn
-      debugShowCheckedModeBanner: false, // Ẩn dải ruy-băng "DEBUG" màu đỏ ở góc màn hình
+      title: 'MathJoy',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        primaryColor: AppColors.primary, // Sử dụng màu xanh dương chủ đạo
-        scaffoldBackgroundColor: AppColors.bgLight, // Màu nền xám nhạt cho toàn app
+        primaryColor: AppColors.primary,
+        scaffoldBackgroundColor: AppColors.bgLight,
 
         // Nếu bản thiết kế Figma của bạn dùng font chữ cụ thể (như Inter, Roboto, Quicksand)
         // Bạn có thể khai báo ở đây sau khi đã thêm font vào pubspec.yaml
@@ -38,7 +40,6 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      // Khai báo màn hình khởi chạy đầu tiên là AuthScreen (Đăng nhập/Đăng ký)
       home: const MainScreen(),
     );
   }
