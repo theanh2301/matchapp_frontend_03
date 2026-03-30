@@ -16,7 +16,7 @@ class LearnScreen extends StatefulWidget {
 
 class _LearnScreenState extends State<LearnScreen> {
   final List<String> _grades = ['Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10', 'Lớp 11', 'Lớp 12'];
-  int _selectedGradeIndex = 1; // Mặc định Lớp 10
+  int _selectedGradeIndex = 0; // Mặc định Lớp 10
 
   // --- SERVICE & TRẠNG THÁI ---
   final SubjectService _learnService = SubjectService();
