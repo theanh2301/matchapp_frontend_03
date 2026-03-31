@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import '../models/flashcard_model.dart';
+import '../models/flashcard_progress_request.dart';
 
 class FlashcardService {
   // TODO: Thay thế bằng URL API thực tế của bạn
@@ -42,4 +43,40 @@ class FlashcardService {
       throw Exception("Lỗi xử lý: $e");
     }
   }
+
+  Future<bool> saveSingleProgress(FlashcardProgressRequest request) async {
+    // Thay đổi URL thành domain/IP thực tế của backend
+    final url = Uri.parse('$baseUrl/progress');
+
+    // 1. Thêm log thông báo BẮT ĐẦU gọi API
+    print('🚀 ĐANG GỌI API FLASHCARD: $url (Lưu thẻ ID: ${request.flashcardId})');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(request.toJson()),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // 2. Thêm log thông báo THÀNH CÔNG
+        print('🚀 Save flashcard successfully');
+        return true;
+      } else {
+        print("Lỗi lưu thẻ ${request.flashcardId}: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("Lỗi kết nối khi lưu thẻ ${request.flashcardId}: $e");
+      return false;
+    }
+  }
+
+  // Hàm nhận danh sách thẻ đã quẹt để lưu lần lượt
+  Future<void> saveMultipleProgress(List<FlashcardProgressRequest> requests) async {
+    for (var request in requests) {
+      await saveSingleProgress(request);
+    }
+  }
+
 }

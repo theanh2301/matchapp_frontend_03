@@ -3,6 +3,7 @@ import 'package:flip_card/flip_card.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 
 import '../../../../data/models/flashcard_model.dart';
+import '../../../../data/models/flashcard_progress_request.dart';
 import '../../../../data/services/flashcard_service.dart';
 
 class FlashcardGameScreen extends StatelessWidget {
@@ -31,6 +32,7 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
   final CardSwiperController _swiperController = CardSwiperController();
   final FlashcardService _flashcardService = FlashcardService();
 
+  bool _isSaving = false;
   bool _isLoading = true;
   bool _hasError = false;
   List<FlashcardModel> _cards = [];
@@ -40,6 +42,8 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
   int _notMemorizedCount = 0;
   int _memorizedCount = 0;
   final List<CardSwiperDirection> _swipeHistory = [];
+  final List<Map<String, dynamic>> _swipeResults = [];
+
 
   @override
   void initState() {
@@ -81,20 +85,36 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
     setState(() {
       _swipeHistory.add(direction);
 
-      if (direction == CardSwiperDirection.left) {
-        _notMemorizedCount++;
-      } else if (direction == CardSwiperDirection.right) {
+      // Ghi nhận trạng thái thẻ (Phải = Biết, Trái = Không biết)
+      bool isKnown = direction == CardSwiperDirection.right;
+
+      // Lưu lại kết quả của thẻ vừa quẹt (Giả sử FlashcardModel có thuộc tính id)
+      _swipeResults.add({
+        'flashcardId': _cards[previousIndex].id, // Đảm bảo gọi đúng tên biến ID của thẻ
+        'isKnown': isKnown,
+      });
+
+      if (isKnown) {
         _memorizedCount++;
+      } else if (direction == CardSwiperDirection.left) {
+        _notMemorizedCount++;
       }
       _currentIndex = currentIndex ?? _cards.length;
     });
     return true;
   }
 
+  // --- CẬP NHẬT HÀM _onUndo ---
   bool _onUndo(int? previousIndex, int currentIndex, CardSwiperDirection direction) {
     setState(() {
       if (_swipeHistory.isNotEmpty) {
         final lastDirection = _swipeHistory.removeLast();
+
+        // Gỡ bỏ kết quả của thẻ cuối cùng khỏi danh sách chuẩn bị gửi API
+        if (_swipeResults.isNotEmpty) {
+          _swipeResults.removeLast();
+        }
+
         if (lastDirection == CardSwiperDirection.left && _notMemorizedCount > 0) {
           _notMemorizedCount--;
         } else if (lastDirection == CardSwiperDirection.right && _memorizedCount > 0) {
@@ -104,6 +124,34 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
       _currentIndex = previousIndex ?? 0;
     });
     return true;
+  }
+
+  // --- HÀM LƯU KẾT QUẢ ---
+  Future<void> _handleFinishDeck(VoidCallback onSuccess) async {
+    setState(() => _isSaving = true);
+
+    // TODO: Thay bằng ID user đang đăng nhập trong app của bạn
+    int currentUserId = 4;
+
+    String lastReviewedTime = DateTime.now().toString().substring(0, 19);
+
+    List<FlashcardProgressRequest> requests = _swipeResults.map((data) {
+      return FlashcardProgressRequest(
+        isKnown: data['isKnown'],
+        lastReviewed: lastReviewedTime,
+        totalXP: 0, // Backend đã tự tính XP nên ta truyền 0
+        flashcardId: data['flashcardId'],
+        userId: currentUserId,
+      );
+    }).toList();
+
+    // Gọi API thông qua service
+    await _flashcardService.saveMultipleProgress(requests);
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      onSuccess();
+    }
   }
 
   @override
@@ -150,7 +198,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
               ),
               const SizedBox(height: 24),
 
-              // 3. KHU VỰC THẺ & TRẠNG THÁI (LOADING/ERROR)
               Expanded(
                 child: _buildBodyContent(),
               ),
@@ -351,6 +398,7 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
     );
   }
 
+  // --- CẬP NHẬT MÀN HÌNH FINISHED ---
   Widget _buildFinishedScreen() {
     return Center(
       child: Column(
@@ -360,43 +408,56 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
           const SizedBox(height: 20),
           const Text("Bạn đã hoàn thành!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 30),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white24,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+
+          // Hiển thị loading nếu đang gọi API
+          if (_isSaving)
+            const CircularProgressIndicator(color: Colors.greenAccent)
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white24,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text("Học lại", style: TextStyle(fontSize: 16)),
+                  onPressed: () {
+                    _handleFinishDeck(() {
+                      setState(() {
+                        _currentIndex = 0;
+                        _notMemorizedCount = 0;
+                        _memorizedCount = 0;
+                        _swipeHistory.clear();
+                        _swipeResults.clear(); // Xóa lịch sử sau khi đã lưu thành công
+                        _resetKey++;
+                      });
+                    });
+                  },
                 ),
-                icon: const Icon(Icons.refresh),
-                label: const Text("Học lại", style: TextStyle(fontSize: 16)),
-                onPressed: () {
-                  setState(() {
-                    _currentIndex = 0;
-                    _notMemorizedCount = 0;
-                    _memorizedCount = 0;
-                    _swipeHistory.clear();
-                    _resetKey++;
-                  });
-                },
-              ),
-              const SizedBox(width: 16),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF7B1FA2),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  elevation: 5,
-                ),
-                icon: const Icon(Icons.arrow_forward),
-                label: const Text("Tiếp theo", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                onPressed: () => Navigator.pop(context, true),
-              )
-            ],
-          )
+                const SizedBox(width: 16),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF7B1FA2),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    elevation: 5,
+                  ),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text("Tiếp theo", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    // Lưu dữ liệu rồi mới thoát màn hình
+                    _handleFinishDeck(() {
+                      Navigator.pop(context, true);
+                    });
+                  },
+                )
+              ],
+            )
         ],
       ),
     );
