@@ -202,6 +202,33 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
+  // Hàm làm lại bài kiểm tra
+  void _retryQuiz() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Làm lại bài tập?"),
+        content: const Text("Kết quả bài làm vừa rồi đã được lưu. Bạn có muốn xóa các lựa chọn hiện tại và làm lại từ đầu không?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Hủy", style: TextStyle(color: Colors.grey))),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() {
+                isSubmitted = false;
+                selectedAnswers.clear();
+                currentQuestionIndex = 0;
+                timeLeft = 300; // Đặt lại 5 phút (Hoặc thay bằng biến thời gian gốc của bạn)
+                _startTimer(); // Bắt đầu đếm ngược lại
+              });
+            },
+            child: const Text("Đồng ý", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -315,16 +342,39 @@ class _QuizScreenState extends State<QuizScreen> {
                         style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ),
-                    Row(
+
+                    isSubmitted
+                        ? GestureDetector(
+                      onTap: _retryQuiz,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.primary, width: 1.5),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.refresh, color: AppColors.primary, size: 18),
+                            SizedBox(width: 4),
+                            Text(
+                              "Làm lại",
+                              style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                        : Row(
                       children: [
-                        Icon(Icons.timer_outlined, color: isSubmitted ? Colors.grey : AppColors.orange, size: 20),
+                        const Icon(Icons.timer_outlined, color: AppColors.orange, size: 20),
                         const SizedBox(width: 4),
                         Text(
-                          isSubmitted ? "Đã nộp" : formattedTime,
-                          style: TextStyle(color: isSubmitted ? Colors.grey : AppColors.orange, fontWeight: FontWeight.bold, fontSize: 16),
+                          formattedTime,
+                          style: const TextStyle(color: AppColors.orange, fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
                 const SizedBox(height: 30),
