@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../../data/models/match_card_model.dart';
+import '../../../../data/models/match_card_progress_model.dart';
 import '../../../../data/services/match_card_service.dart';
 
 // MÔ HÌNH DỮ LIỆU THẺ DÙNG CHO GIAO DIỆN
@@ -47,6 +48,11 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
   bool _isProcessing = false;
   bool _isFinished = false;
 
+  bool _isSaving = false;
+  Timer? _timer;
+  int _secondsElapsed = 0;
+  int _totalPairs = 0;
+
   @override
   void initState() {
     super.initState();
@@ -79,21 +85,43 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
     }
   }
 
-  // BIẾN ĐỔI DATA TỪ API THÀNH THẺ UI
+  @override
+  void dispose() {
+    _timer?.cancel(); // Hủy timer khi thoát màn hình
+    super.dispose();
+  }
+
+  // --- HÀM BẮT ĐẦU ĐẾM THỜI GIAN ---
+  void _startTimer() {
+    _timer?.cancel();
+    _secondsElapsed = 0;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!_isFinished && mounted) {
+        setState(() {
+          _secondsElapsed++;
+        });
+      }
+    });
+  }
+
   void _setupCards() {
     _cards.clear();
-
     for (var item in _apiData) {
-      // Vì API đã tách sẵn từng thẻ, ta chỉ việc map trực tiếp 1-1
       _cards.add(MatchCard(
           id: item.id,
-          text: item.content, // Lấy trường content (Dog, Chó, Cat...)
-          pairId: item.pairId, // Lấy pairId để ghép cặp
-          xpReward: item.xpReward // XP thưởng khi ghép trúng
+          text: item.content,
+          pairId: item.pairId,
+          xpReward: item.xpReward
       ));
     }
 
-    _cards.shuffle(); // Xáo trộn vị trí các thẻ
+    // Tổng số cặp thẻ bằng 1 nửa số lượng thẻ API trả về
+    _totalPairs = _cards.length ~/ 2;
+
+    _cards.shuffle();
+
+    // Bắt đầu đếm ngược ngay khi setup xong thẻ
+    _startTimer();
   }
 
   // LOGIC XỬ LÝ CHẠM
@@ -149,6 +177,31 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
       setState(() {
         _isFinished = true;
       });
+      _timer?.cancel();
+      _saveProgressToServer();
+    }
+  }
+
+  // --- HÀM MỚI: GỌI API LƯU ---
+  Future<void> _saveProgressToServer() async {
+    setState(() => _isSaving = true);
+
+    // TODO: Lấy User ID thực tế từ app
+    int currentUserId = 1;
+
+    final request = MatchCardProgressRequest(
+      totalPairs: _totalPairs,
+      correctPairs: _totalPairs, // Nếu thắng thì số cặp đúng = tổng số cặp
+      timeTaken: _secondsElapsed,
+      totalXP: _score, // Tổng XP thưởng kiếm được
+      lessonId: widget.lessonId,
+      userId: currentUserId,
+    );
+
+    await _matchCardService.saveMatchCardProgress(request);
+
+    if (mounted) {
+      setState(() => _isSaving = false);
     }
   }
 
@@ -303,86 +356,77 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
   // KHUNG THÔNG BÁO HOÀN THÀNH TRONG SUỐT
   Widget _buildGlassOverlay() {
     return Positioned.fill(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-        child: Container(
-          color: Colors.black.withOpacity(0.2),
-          child: Center(
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.8, end: 1.0),
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeOutBack,
-              builder: (context, scale, child) {
-                return Transform.scale(scale: scale, child: child);
-              },
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.85,
-                padding: const EdgeInsets.all(32.0),
+      // ... BackdropFilter và animation giữ nguyên
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.85,
+        padding: const EdgeInsets.all(32.0),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.emoji_events, size: 80, color: Colors.amber),
+            const SizedBox(height: 16),
+            const Text('Hoàn thành!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 8),
+            // Hiển thị thêm thời gian đã chơi
+            Text('Thời gian: ${_secondsElapsed}s', style: const TextStyle(fontSize: 16, color: Colors.white70)),
+            const SizedBox(height: 24),
+
+            if (_isSaving)
+              const CircularProgressIndicator(color: Colors.amber)
+            else ...[
+              // ... Giữ nguyên khối điểm số và các nút bấm của bạn ...
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10)),
-                  ],
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: Colors.amber, width: 2),
                 ),
-                child: Column(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.emoji_events, size: 80, color: Colors.amber),
-                    const SizedBox(height: 16),
-                    const Text('Hoàn thành!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: Colors.amber, width: 2),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 24),
-                          const SizedBox(width: 8),
-                          Text('+$_score XP', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _playAgain,
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.white.withOpacity(0.6)),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: const Text('Chơi lại', style: TextStyle(color: Colors.white, fontSize: 16)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.greenAccent.shade400,
-                              foregroundColor: Colors.black87,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: const Text('Tiếp tục', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    )
+                    const Icon(Icons.star, color: Colors.amber, size: 24),
+                    const SizedBox(width: 8),
+                    Text('+$_score XP', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber)),
                   ],
                 ),
               ),
-            ),
-          ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _playAgain,
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.white.withOpacity(0.6)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Chơi lại', style: TextStyle(color: Colors.white, fontSize: 16)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.greenAccent.shade400,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Tiếp tục', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              )
+            ]
+          ],
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../../data/models/quiz_model.dart';
+import '../../../../data/models/quiz_progress_model.dart';
 import '../../../../data/services/quiz_service.dart';
 
 class QuizGameScreen extends StatefulWidget {
@@ -25,6 +26,9 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
   int _correctAnswers = 0;
   int _totalXpEarned = 0; // Thay vì điểm cứng, ta lấy từ DB
   bool _isFinished = false;
+
+  bool _isSaving = false;
+  final List<QuizProgressRequest> _submitQueue = [];
 
   @override
   void initState() {
@@ -71,14 +75,40 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
 
   // XỬ LÝ KHI BẤM NÚT "TIẾP TỤC"
   void _onNextPressed() {
+    // 1. Lưu đáp án vừa chọn vào hàng đợi
+    // TODO: Thay bằng userId thực tế
+    int currentUserId = 3;
+
+    _submitQueue.add(QuizProgressRequest(
+      userId: currentUserId,
+      questionId: _quizzes[_currentIndex].id, // Giả sử Model có thuộc tính id
+      answerId: _quizzes[_currentIndex].answers[_selectedOptionIndex!].id, // Lấy id của đáp án được chọn
+    ));
+
+    // 2. Kiểm tra nếu chưa hết câu hỏi thì qua câu mới
     if (_currentIndex < _quizzes.length - 1) {
       setState(() {
         _currentIndex++;
         _selectedOptionIndex = null;
       });
     } else {
+      // Đã xong câu cuối -> Gọi hàm lưu API
+      _saveAllProgress();
+    }
+  }
+
+  // --- HÀM LƯU LÊN SERVER ---
+  Future<void> _saveAllProgress() async {
+    setState(() {
+      _isFinished = true; // Kích hoạt hiện bảng thông báo
+      _isSaving = true;   // Kích hoạt vòng xoay loading
+    });
+
+    await _quizService.saveQuizProgress(_submitQueue);
+
+    if (mounted) {
       setState(() {
-        _isFinished = true;
+        _isSaving = false; // Tắt vòng xoay loading
       });
     }
   }
@@ -91,6 +121,7 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
       _correctAnswers = 0;
       _totalXpEarned = 0;
       _selectedOptionIndex = null;
+      _submitQueue.clear(); // Xóa lịch sử cũ để chơi lại
     });
   }
 
@@ -311,7 +342,6 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
       ],
     );
   }
-
   Widget _buildGlassOverlay() {
     return Positioned.fill(
       child: BackdropFilter(
@@ -346,52 +376,61 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
                     const SizedBox(height: 12),
                     Text('Bạn đã trả lời đúng $_correctAnswers/${_quizzes.length} câu', style: const TextStyle(fontSize: 18, color: Colors.white70)),
                     const SizedBox(height: 30),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: Colors.amber.withOpacity(0.8), width: 2),
+
+                    // NẾU ĐANG LƯU THÌ HIỆN VÒNG XOAY, NẾU KHÔNG THÌ HIỆN ĐIỂM VÀ NÚT
+                    if (_isSaving)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20.0),
+                        child: CircularProgressIndicator(color: Colors.amber),
+                      )
+                    else ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: Colors.amber.withOpacity(0.8), width: 2),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star, color: Colors.amber, size: 28),
+                            const SizedBox(width: 8),
+                            Text('+$_totalXpEarned XP', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber)),
+                          ],
+                        ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      const SizedBox(height: 40),
+                      Row(
                         children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 28),
-                          const SizedBox(width: 8),
-                          Text('+$_totalXpEarned XP', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber)),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _playAgain,
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: Colors.white.withOpacity(0.6), width: 1.5),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                              child: const Text('Học lại', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.greenAccent.shade400,
+                                foregroundColor: Colors.black87,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                elevation: 5,
+                              ),
+                              child: const Text('Tiếp tục', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _playAgain,
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.white.withOpacity(0.6), width: 1.5),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            ),
-                            child: const Text('Học lại', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.greenAccent.shade400,
-                              foregroundColor: Colors.black87,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              elevation: 5,
-                            ),
-                            child: const Text('Tiếp tục', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    )
+                      )
+                    ]
                   ],
                 ),
               ),

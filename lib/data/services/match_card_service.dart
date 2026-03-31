@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
 import '../models/match_card_model.dart';
+import '../models/match_card_progress_model.dart';
 
 class MatchCardService {
   // TODO: Điều chỉnh URL cho khớp với API backend của bạn
@@ -40,4 +41,32 @@ class MatchCardService {
       throw Exception("Lỗi kết nối: $e");
     }
   }
+
+  Future<bool> saveMatchCardProgress(MatchCardProgressRequest request) async {
+    // Đổi lại URL thực tế của backend
+    final url = Uri.parse('$baseUrl/progress');
+
+    print('🚀 ĐANG GỌI API MATCH CARD: $url');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(request.toJson()),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('🚀 Call match card progress successfully');
+        return true;
+      } else {
+        print("Lỗi lưu tiến độ Match Card: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("Lỗi kết nối lưu Match Card: $e");
+      return false;
+    }
+  }
+
+
 }
