@@ -43,7 +43,7 @@ class QuizService {
 
   Future<void> saveQuizProgress(List<QuizProgressRequest> requests) async {
     // Thay đổi domain/IP phù hợp với môi trường của bạn
-    final url = Uri.parse('http://10.0.2.2:8080/api/quiz/progress');
+    final url = Uri.parse('$baseUrl/progress');
 
     for (var request in requests) {
       print('🚀 ĐANG GỌI API QUIZ: $url (Lưu câu hỏi ID: ${request.questionId})');

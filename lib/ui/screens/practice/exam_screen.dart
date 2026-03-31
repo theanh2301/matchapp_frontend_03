@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/exam_model.dart'; // Nơi chứa PracticeQuestionModel và PracticeAnswerModel
+import '../../../data/models/practice_progress_model.dart';
 import '../../../data/services/exam_service.dart'; // Nơi chứa PracticeListService
 
 class QuizScreen extends StatefulWidget {
   final int practiceId; // Bắt buộc truyền ID bài tập vào
   final String title;
+
 
   const QuizScreen({
     super.key,
@@ -32,6 +34,8 @@ class _QuizScreenState extends State<QuizScreen> {
   Timer? _timer;
   Map<int, int> selectedAnswers = {}; // Lưu đáp án: {questionIndex: optionIndex}
   bool isSubmitted = false; // Đã nộp bài chưa?
+  // 🔥 THÊM BIẾN NÀY ĐỂ HIỂN THỊ LOADING KHI LƯU KẾT QUẢ
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -93,12 +97,40 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   // Nộp bài
-  void _submitQuiz() {
+  Future<void> _submitQuiz() async {
     setState(() {
-      isSubmitted = true;
-      _timer?.cancel(); // Dừng thời gian
-      currentQuestionIndex = 0; // Quay về câu 1 để xem lại đáp án và giải thích
+      _isSaving = true; // Kích hoạt UI loading
+      _timer?.cancel(); // Dừng đồng hồ
     });
+
+    // TODO: Lấy userId thực tế đang đăng nhập trong app của bạn
+    int currentUserId = 1;
+    List<PracticeProgressRequest> requests = [];
+
+    // Duyệt qua các câu hỏi đã chọn đáp án để tạo list request
+    selectedAnswers.forEach((questionIndex, optionIndex) {
+      final question = _questions[questionIndex];
+      final selectedAnswer = question.answers[optionIndex];
+
+      requests.add(PracticeProgressRequest(
+        userId: currentUserId,
+        questionId: question.id, // Giả sử PracticeQuestionModel có thuộc tính id
+        answerId: selectedAnswer.id, // Giả sử PracticeAnswerModel có thuộc tính id
+      ));
+    });
+
+    // Chỉ gọi API nếu người dùng có chọn ít nhất 1 đáp án
+    if (requests.isNotEmpty) {
+      await _practiceListService.saveQuizProgress(requests);
+    }
+
+    if (mounted) {
+      setState(() {
+        _isSaving = false; // Tắt vòng xoay
+        isSubmitted = true; // Đánh dấu đã nộp bài
+        currentQuestionIndex = 0; // Quay về câu 1 để người dùng xem giải thích
+      });
+    }
   }
 
   // Mở BottomSheet hiện lưới nhảy nhanh câu hỏi
@@ -213,6 +245,28 @@ class _QuizScreenState extends State<QuizScreen> {
             SizedBox(height: 16),
             Text("Đang tải bộ câu hỏi...", style: TextStyle(color: Colors.grey)),
           ],
+        ),
+      );
+    }
+
+    if (_isSaving) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: AppColors.primary),
+            SizedBox(height: 16),
+            Text("Đang nộp bài và lưu kết quả...", style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      );
+    }
+
+    if (_errorMessage.isNotEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Text("Đã có lỗi xảy ra:\n$_errorMessage", style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
         ),
       );
     }

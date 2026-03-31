@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import '../models/exam_model.dart';
+import '../models/practice_progress_model.dart';
 
 class PracticeListService {
   final String baseUrl = "http://10.0.2.2:8080/api/practices";
@@ -52,4 +53,30 @@ class PracticeListService {
       throw Exception("Lỗi xử lý: $e");
     }
   }
+
+  Future<void> saveQuizProgress(List<PracticeProgressRequest> requests) async {
+    // Thay đổi domain/IP phù hợp với môi trường của bạn
+    final url = Uri.parse('$baseUrl/progress');
+
+    for (var request in requests) {
+      print('🚀 ĐANG GỌI API QUIZ: $url (Lưu câu hỏi ID: ${request.questionId})');
+
+      try {
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(request.toJson()),
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          print('🚀 Call quiz progress successfully for Question ${request.questionId}');
+        } else {
+          print("Lỗi lưu Quiz ${request.questionId}: ${response.body}");
+        }
+      } catch (e) {
+        print("Lỗi kết nối khi lưu Quiz ${request.questionId}: $e");
+      }
+    }
+  }
+
 }
