@@ -29,12 +29,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadData();
+  }
+
+  void _loadData() {
     _dailyStatsFuture = _practiceService.getPracticeStats('DAILY', currentUserId);
     _topicStatsFuture = _practiceService.getPracticeStats('TOPIC', currentUserId);
     _challengeStatsFuture = _practiceService.getPracticeStats('CHALLENGE', currentUserId);
-
-    // Gọi API lấy danh sách đề cần cải thiện
     _weakTestsFuture = _practiceService.getWeakPractices('TOPIC', currentUserId);
+  }
+
+  void _refreshData() {
+    setState(() {
+      _loadData();
+    });
   }
 
   @override
@@ -155,6 +163,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                             child: WeakPracticeCard(
                               practice: practice,
                               userId: currentUserId,
+                              onRefresh: _refreshData,
                             ),
                           )).toList(),
                         );
@@ -283,7 +292,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         userId: currentUserId,
                       ),
                     ),
-                  );
+                  ).then((_) {
+                    _refreshData();
+                  });
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
@@ -350,11 +361,13 @@ class _PracticeScreenState extends State<PracticeScreen> {
 class WeakPracticeCard extends StatefulWidget {
   final PracticeListModel practice;
   final int userId;
+  final VoidCallback onRefresh;
 
-  const WeakPracticeCard({super.key, required this.practice, required this.userId});
+  const WeakPracticeCard({super.key, required this.practice, required this.userId,required this.onRefresh,});
 
   @override
   State<WeakPracticeCard> createState() => _WeakPracticeCardState();
+
 }
 
 class _WeakPracticeCardState extends State<WeakPracticeCard> {
@@ -494,7 +507,9 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                                     timeLimit: widget.practice.timeLimit,
                                   ),
                                 ),
-                              );
+                              ).then((_) {
+                                widget.onRefresh();
+                              });
                             },
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
