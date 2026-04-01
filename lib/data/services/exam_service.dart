@@ -2,17 +2,18 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import '../models/exam_model.dart';
+import '../models/practice_model.dart';
 import '../models/practice_progress_model.dart';
+
 
 class PracticeListService {
   final String baseUrl = "http://10.0.2.2:8080/api/practices";
 
+  /// Lấy danh sách câu hỏi cho một bài tập
   Future<List<PracticeQuestionModel>> getPracticeQuestions(int practiceId) async {
     try {
-      // SỬA DÒNG NÀY: URL chỉ cần ID của bài tập
       final Uri url = Uri.parse('$baseUrl/$practiceId');
-
-      debugPrint("🚀 ĐANG GỌI API LẤY CÂU HỎI CHO PRACTICE_ID: $practiceId");
+      debugPrint("🚀 ĐANG GỌI API LẤY CÂU HỎI: $url");
 
       final response = await http.get(
         url,
@@ -29,16 +30,12 @@ class PracticeListService {
         debugPrint("🚀 Lấy danh sách câu hỏi thành công!");
 
         if (decodedData is List) {
-          return decodedData.map((item) =>
-              PracticeQuestionModel.fromJson(item as Map<String, dynamic>)).toList();
+          return decodedData.map((item) => PracticeQuestionModel.fromJson(item as Map<String, dynamic>)).toList();
         } else if (decodedData is Map<String, dynamic>) {
           if (decodedData.containsKey('data') && decodedData['data'] is List) {
-            return (decodedData['data'] as List).map((item) =>
-                PracticeQuestionModel.fromJson(item as Map<String, dynamic>)).toList();
-          } else if (decodedData.containsKey('result') &&
-              decodedData['result'] is List) {
-            return (decodedData['result'] as List).map((item) =>
-                PracticeQuestionModel.fromJson(item as Map<String, dynamic>)).toList();
+            return (decodedData['data'] as List).map((item) => PracticeQuestionModel.fromJson(item as Map<String, dynamic>)).toList();
+          } else if (decodedData.containsKey('result') && decodedData['result'] is List) {
+            return (decodedData['result'] as List).map((item) => PracticeQuestionModel.fromJson(item as Map<String, dynamic>)).toList();
           } else {
             throw Exception("Không tìm thấy danh sách câu hỏi trong Object JSON.");
           }
@@ -54,12 +51,12 @@ class PracticeListService {
     }
   }
 
+  /// Lưu tiến độ làm bài
   Future<void> saveQuizProgress(List<PracticeProgressRequest> requests) async {
-    // Thay đổi domain/IP phù hợp với môi trường của bạn
     final url = Uri.parse('$baseUrl/progress');
 
     for (var request in requests) {
-      print('🚀 ĐANG GỌI API QUIZ: $url (Lưu câu hỏi ID: ${request.questionId})');
+      debugPrint('🚀 ĐANG GỌI API QUIZ: $url (Lưu câu hỏi ID: ${request.questionId})');
 
       try {
         final response = await http.post(
@@ -69,13 +66,79 @@ class PracticeListService {
         );
 
         if (response.statusCode == 200 || response.statusCode == 201) {
-          print('🚀 Call quiz progress successfully for Question ${request.questionId}');
+          debugPrint('✅ Call quiz progress successfully for Question ${request.questionId}');
         } else {
-          print("Lỗi lưu Quiz ${request.questionId}: ${response.body}");
+          debugPrint("❌ Lỗi lưu Quiz ${request.questionId}: ${response.body}");
         }
       } catch (e) {
-        print("Lỗi kết nối khi lưu Quiz ${request.questionId}: $e");
+        debugPrint("❌ Lỗi kết nối khi lưu Quiz ${request.questionId}: $e");
       }
+    }
+  }
+
+  /// Gọi API lấy chi tiết các câu làm sai
+  /// Đã đổi kiểu trả về từ List<dynamic> sang List<WrongQuestionModel>
+  /// 1. API cho màn hình List (Hiển thị text chi tiết câu sai)
+  Future<List<WrongQuestionModel>> getWrongQuestionsDetail(int practiceId, int userId) async {
+    try {
+      final Uri url = Uri.parse('$baseUrl/$practiceId/wrong-questions-detail?userId=$userId');
+      debugPrint("🚀 ĐANG GỌI API LẤY CHI TIẾT CÂU SAI: $url");
+
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.body.isEmpty) return [];
+
+        final dynamic decodedData = jsonDecode(utf8.decode(response.bodyBytes));
+        List<dynamic> rawList = [];
+        if (decodedData is List) {
+          rawList = decodedData;
+        } else if (decodedData is Map<String, dynamic> && decodedData.containsKey('data')) {
+          rawList = decodedData['data'];
+        }
+
+        // Map sang WrongQuestionModel mới
+        return rawList.map((item) => WrongQuestionModel.fromJson(item as Map<String, dynamic>)).toList();
+      } else {
+        throw Exception("Lỗi server ${response.statusCode}");
+      }
+    } catch (e) {
+      throw Exception("Lỗi lấy dữ liệu câu sai: $e");
+    }
+  }
+
+  /// 2. API cho màn hình Exam (Để làm lại câu sai)
+  Future<List<PracticeQuestionModel>> getWrongQuestionsForExam(int practiceId, int userId) async {
+    try {
+      final Uri url = Uri.parse('$baseUrl/$practiceId/wrong-questions-exam?userId=$userId');
+      debugPrint("🚀 ĐANG GỌI API LẤY CÂU SAI CHO EXAM: $url");
+
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.body.isEmpty) return [];
+
+        final dynamic decodedData = jsonDecode(utf8.decode(response.bodyBytes));
+        List<dynamic> rawList = [];
+        if (decodedData is List) {
+          rawList = decodedData;
+        } else if (decodedData is Map<String, dynamic> && decodedData.containsKey('data')) {
+          rawList = decodedData['data'];
+        }
+
+        // Map sang PracticeQuestionModel để QuizScreen dùng được luôn
+        return rawList.map((item) => PracticeQuestionModel.fromJson(item as Map<String, dynamic>)).toList();
+      } else {
+        throw Exception("Lỗi server ${response.statusCode}");
+      }
+    } catch (e) {
+      throw Exception("Lỗi lấy dữ liệu exam câu sai: $e");
     }
   }
 

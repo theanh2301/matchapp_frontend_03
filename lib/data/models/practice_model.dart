@@ -26,3 +26,23 @@ class PracticeModel {
   // Tiện ích phụ trợ: Trả về chuỗi dạng "2/30"
   String get progressText => "$completedPractice/$totalPractice";
 }
+
+class WrongQuestionModel {
+  final String questionContent;
+  final String userAnswerContent;
+  final String correctAnswerContent;
+
+  WrongQuestionModel({
+    required this.questionContent,
+    required this.userAnswerContent,
+    required this.correctAnswerContent,
+  });
+
+  factory WrongQuestionModel.fromJson(Map<String, dynamic> json) {
+    return WrongQuestionModel(
+      questionContent: json['questionContent']?.toString() ?? 'Không có nội dung câu hỏi',
+      userAnswerContent: json['userAnswerContent']?.toString() ?? 'Chưa chọn',
+      correctAnswerContent: json['correctAnswerContent']?.toString() ?? 'Không có đáp án',
+    );
+  }
+}

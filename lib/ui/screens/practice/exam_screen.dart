@@ -10,12 +10,14 @@ class QuizScreen extends StatefulWidget {
   final int practiceId; // Bắt buộc truyền ID bài tập vào
   final String title;
   final int userId;
+  final bool isRetryMistakes;
 
   const QuizScreen({
     super.key,
     required this.practiceId,
     required this.title,
     required this.userId,
+    this.isRetryMistakes = false,
   });
 
   @override
@@ -47,7 +49,15 @@ class _QuizScreenState extends State<QuizScreen> {
   // Hàm gọi API lấy danh sách câu hỏi
   Future<void> _loadQuestions() async {
     try {
-      final data = await _practiceListService.getPracticeQuestions(widget.practiceId);
+      List<PracticeQuestionModel> data;
+
+      // KIỂM TRA: Nếu là làm lại câu sai thì gọi API câu sai, ngược lại gọi API bình thường
+      if (widget.isRetryMistakes) {
+        // Gọi hàm mới vừa tạo
+        data = await _practiceListService.getWrongQuestionsForExam(widget.practiceId, widget.userId);
+      } else {
+        data = await _practiceListService.getPracticeQuestions(widget.practiceId);
+      }
 
       setState(() {
         _questions = data;
