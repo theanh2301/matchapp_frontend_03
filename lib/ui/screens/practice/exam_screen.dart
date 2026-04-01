@@ -9,12 +9,13 @@ import '../../../data/services/exam_service.dart'; // Nơi chứa PracticeListSe
 class QuizScreen extends StatefulWidget {
   final int practiceId; // Bắt buộc truyền ID bài tập vào
   final String title;
-
+  final int userId;
 
   const QuizScreen({
     super.key,
     required this.practiceId,
     required this.title,
+    required this.userId,
   });
 
   @override
@@ -104,7 +105,7 @@ class _QuizScreenState extends State<QuizScreen> {
     });
 
     // TODO: Lấy userId thực tế đang đăng nhập trong app của bạn
-    int currentUserId = 1;
+    int currentUserId = widget.userId;
     List<PracticeProgressRequest> requests = [];
 
     // Duyệt qua các câu hỏi đã chọn đáp án để tạo list request

@@ -20,6 +20,40 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   final int currentUserId = 1;
 
+  // --- MOCK DATA: Dữ liệu mẫu cho phần Đề dưới 70% ---
+  // (Sau này bạn có thể thay thế bằng dữ liệu gọi từ API)
+  final List<Map<String, dynamic>> _weakTests = [
+    {
+      "testName": "Phương trình bậc 2",
+      "topic": "Đại số",
+      "accuracy": 0.55, // 55%
+      "mistakes": [
+        {
+          "question": "Giải phương trình: x² - 5x + 6 = 0",
+          "userAnswer": "x = 2",
+          "correctAnswer": "x = 2 hoặc x = 3"
+        },
+        {
+          "question": "Tính nghiệm kép của: x² - 4x + 4 = 0",
+          "userAnswer": "x = 4",
+          "correctAnswer": "x = 2"
+        }
+      ]
+    },
+    {
+      "testName": "Đề ôn tập Hệ thức lượng",
+      "topic": "Hình học",
+      "accuracy": 0.65, // 65%
+      "mistakes": [
+        {
+          "question": "Tính sin(45°)",
+          "userAnswer": "1/2",
+          "correctAnswer": "√2/2"
+        }
+      ]
+    }
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +72,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ==========================================
-            // 1. HEADER
+            // 1. HEADER (Giữ nguyên)
             // ==========================================
             Container(
               width: double.infinity,
@@ -76,7 +110,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
             ),
 
             // ==========================================
-            // 2. CÁC THẺ BÀI TẬP (Truyền practiceType & Future)
+            // 2. CÁC THẺ BÀI TẬP (Giữ nguyên)
             // ==========================================
             Transform.translate(
               offset: const Offset(0, -20),
@@ -121,51 +155,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     const SizedBox(height: 32),
 
                     // ==========================================
-                    // 3. TIẾN ĐỘ THEO CHỦ ĐỀ
+                    // 3 & 4 (GỘP): ĐỀ CẦN CẢI THIỆN & LỖI SAI (MỚI)
                     // ==========================================
                     Row(
                       children: [
                         Icon(
-                          Icons.trending_up,
-                          color: AppColors.purple,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          "Tiến độ theo chủ đề",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Column(
-                      children: [
-                        _buildSubjectProgressCard("Đại số", 0.75, "45 bài đã làm", "82%", AppColors.primary),
-                        const SizedBox(height: 12),
-                        _buildSubjectProgressCard("Hình học", 0.60, "32 bài đã làm", "78%", AppColors.green),
-                        const SizedBox(height: 12),
-                        _buildSubjectProgressCard("Lượng giác", 0.40, "18 bài đã làm", "65%", AppColors.orange),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // ==========================================
-                    // 4. LỖI CẦN ÔN LẠI
-                    // ==========================================
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.bug_report_outlined,
+                          Icons.query_stats,
                           color: Colors.red.shade400,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
                         const Text(
-                          "Lỗi cần ôn lại",
+                          "Đề cần cải thiện",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -174,24 +175,16 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildMistakeCard(
-                      tag: "Phương trình bậc 2",
-                      question: "Giải phương trình: x² - 5x + 6 = 0",
-                      userAnswer: "x = 2",
-                      correctAnswer: "x = 2 hoặc x = 3",
-                    ),
-                    const SizedBox(height: 16),
-                    _buildMistakeCard(
-                      tag: "Lượng giác",
-                      question: "Tính sin(45°)",
-                      userAnswer: "1/2",
-                      correctAnswer: "√2/2",
-                    ),
+                    // Duyệt qua danh sách các đề yếu để render UI
+                    ..._weakTests.map((test) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: _buildExpandableWeakTestCard(test),
+                    )),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
 
                     // ==========================================
-                    // 5. AI GỢI Ý LUYỆN TẬP
+                    // 5. AI GỢI Ý LUYỆN TẬP (Giữ nguyên)
                     // ==========================================
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -261,7 +254,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
     );
   }
 
-  // --- CẬP NHẬT: Thêm practiceType và FutureBuilder vào Card ---
+  // --- WIDGET CON: Thẻ bài tập (Giữ nguyên không đổi) ---
   Widget _buildChallengeCard({
     required BuildContext context,
     required String practiceType,
@@ -275,12 +268,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
     return FutureBuilder<PracticeModel>(
         future: futureStats,
         builder: (context, snapshot) {
-
-          // Giá trị mặc định khi đang tải hoặc lỗi
           String displayProgressText = "Đang tải...";
           double displayProgressValue = 0.0;
 
-          // Cập nhật giá trị khi lấy data thành công
           if (snapshot.hasData) {
             final data = snapshot.data!;
             displayProgressText = "${data.progressText} đề hoàn thành";
@@ -304,7 +294,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
                 onTap: () {
-                  // Truyền practiceType sang màn hình danh sách để filter
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -314,8 +303,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         themeColor: themeColor,
                         headerIcon: icon,
                         practiceType: practiceType,
-                        // Bạn cần cập nhật file PracticeListScreen để nhận thêm param practiceType này nhé
-                        // practiceType: practiceType,
+                        userId: currentUserId,
                       ),
                     ),
                   );
@@ -400,20 +388,16 @@ class _PracticeScreenState extends State<PracticeScreen> {
               ),
             ),
           );
-        }
-    );
+        });
   }
 
-  // --- WIDGET CON: Thanh tiến độ môn học (Giữ nguyên) ---
-  Widget _buildSubjectProgressCard(
-      String title,
-      double progress,
-      String subtitleLeft,
-      String accuracy,
-      Color color,
-      ) {
+  // --- WIDGET CON MỚI: Thẻ Đề Yếu có thể mở rộng ---
+  Widget _buildExpandableWeakTestCard(Map<String, dynamic> testData) {
+    double accuracy = testData['accuracy'];
+    int percent = (accuracy * 100).toInt();
+    List mistakes = testData['mistakes'];
+
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
@@ -425,144 +409,99 @@ class _PracticeScreenState extends State<PracticeScreen> {
           )
         ],
       ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-              Text(
-                "${(progress * 100).toInt()}%",
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-              ),
-            ],
+      // Sử dụng Theme để ẩn 2 đường gạch viền mặc định của ExpansionTile khi mở rộng
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          title: Text(
+            testData['testName'],
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           ),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: progress,
-            backgroundColor: Colors.grey.shade200,
-            color: color,
-            minHeight: 8,
-            borderRadius: BorderRadius.circular(10),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              "Chủ đề: ${testData['topic']} • ${mistakes.length} câu sai",
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                subtitleLeft,
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              "$percent%",
+              style: TextStyle(
+                color: Colors.red.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
               ),
-              Row(
-                children: [
-                  const Text("Độ chính xác: ", style: TextStyle(fontSize: 12, color: Colors.black87)),
-                  Text(
-                    accuracy,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              )
-            ],
+            ),
           ),
-        ],
+          // Các phần tử xổ xuống (danh sách các câu sai)
+          children: mistakes.map((mistake) {
+            return _buildMistakeDetailItem(
+              question: mistake['question'],
+              userAnswer: mistake['userAnswer'],
+              correctAnswer: mistake['correctAnswer'],
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
-  // --- WIDGET CON: Thẻ Lỗi cần ôn lại (Giữ nguyên) ---
-  Widget _buildMistakeCard({
-    required String tag,
+  // --- WIDGET CON MỚI: Chi tiết từng câu sai bên trong ExpansionTile ---
+  Widget _buildMistakeDetailItem({
     required String question,
     required String userAnswer,
     required String correctAnswer,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red.shade200, width: 1.5),
+        color: Colors.red.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade100, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              tag,
-              style: TextStyle(
-                color: Colors.red.shade400,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
           Text(
             question,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87),
           ),
           const SizedBox(height: 8),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Bạn: ",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
+              const Icon(Icons.close, color: Colors.red, size: 16),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  "Bạn chọn: $userAnswer",
+                  style: const TextStyle(color: Colors.red, fontSize: 13),
                 ),
-              ),
-              Text(
-                userAnswer,
-                style: const TextStyle(fontSize: 13, color: Colors.black87),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Đúng: ",
-                style: TextStyle(
-                  color: AppColors.green,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
+              const Icon(Icons.check, color: Colors.green, size: 16),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  "Đáp án: $correctAnswer",
+                  style: const TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.w500),
                 ),
-              ),
-              Text(
-                correctAnswer,
-                style: const TextStyle(fontSize: 13, color: Colors.black87),
               ),
             ],
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () {},
-            child: const Row(
-              children: [
-                Text(
-                  "Học lại khái niệm này ",
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Icon(Icons.arrow_right_alt, color: AppColors.primary, size: 16),
-              ],
-            ),
           ),
         ],
       ),
