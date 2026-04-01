@@ -33,8 +33,16 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
   @override
   void initState() {
     super.initState();
-    // Gọi API kèm theo userId
-    _futurePractices = _practiceService.getPracticeOverview(widget.practiceType, widget.userId);
+    _loadData();
+  }
+
+  void _loadData() {
+    setState(() {
+      _futurePractices = _practiceService.getPracticeOverview(
+        widget.practiceType,
+        widget.userId,
+      );
+    });
   }
 
   @override
@@ -210,17 +218,20 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
     // --- KẾT THÚC LOGIC MÀU SẮC ---
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => QuizScreen(
-              practiceId: item.id,
-              title: item.title,
-              userId: widget.userId,
-            ),
+            builder: (context) =>
+                QuizScreen(
+                  practiceId: item.id,
+                  title: item.title,
+                  userId: widget.userId,
+                ),
           ),
         );
+
+        _loadData();
       },
       child: Container(
         padding: const EdgeInsets.all(20),
