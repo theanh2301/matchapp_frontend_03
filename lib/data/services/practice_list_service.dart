@@ -4,12 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:learn_math_app_03/data/models/practice_list_model.dart';
 
 class PracticeListService {
+  // Lưu ý: Dùng 10.0.2.2 nếu chạy máy ảo Android, localhost nếu dùng web/iOS
   final String baseUrl = "http://10.0.2.2:8080/api/practices";
 
-  /// Gọi API lấy danh sách tổng quan các bài practice theo độ khó
-  Future<List<PracticeListModel>> getPracticeOverview(String practiceType) async {
+  /// Gọi API lấy danh sách tổng quan. Đã thêm [userId]
+  Future<List<PracticeListModel>> getPracticeOverview(String practiceType, int userId) async {
     try {
-      final Uri url = Uri.parse('$baseUrl/overview?practiceType=$practiceType');
+      // Nối thêm &userId=$userId vào chuỗi query
+      final Uri url = Uri.parse('$baseUrl/overview?practiceType=$practiceType&userId=$userId');
       debugPrint("🚀 ĐANG GỌI API OVERVIEW: $url");
 
       final response = await http.get(
@@ -24,7 +26,6 @@ class PracticeListService {
         }
 
         final dynamic decodedData = jsonDecode(utf8.decode(response.bodyBytes));
-        debugPrint("🚀 Lấy danh sách PracticeOverview thành công!");
 
         if (decodedData is List) {
           return decodedData.map((item) =>
@@ -33,8 +34,7 @@ class PracticeListService {
           if (decodedData.containsKey('data') && decodedData['data'] is List) {
             return (decodedData['data'] as List).map((item) =>
                 PracticeListModel.fromJson(item as Map<String, dynamic>)).toList();
-          } else if (decodedData.containsKey('result') &&
-              decodedData['result'] is List) {
+          } else if (decodedData.containsKey('result') && decodedData['result'] is List) {
             return (decodedData['result'] as List).map((item) =>
                 PracticeListModel.fromJson(item as Map<String, dynamic>)).toList();
           } else {
