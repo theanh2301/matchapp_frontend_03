@@ -186,6 +186,7 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
   }
 
   // WIDGET CON: Xây dựng từng thẻ bài tập lấy từ Model
+  // WIDGET CON: Xây dựng từng thẻ bài tập lấy từ Model
   Widget _buildPracticeCard(
       BuildContext context,
       int index,
@@ -193,28 +194,41 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
       Color themeColor,
       ) {
 
-    // --- BẮT ĐẦU LOGIC XỬ LÝ MÀU SẮC DỰA VÀO TIẾN ĐỘ ---
+    // --- BẮT ĐẦU LOGIC XỬ LÝ MÀU SẮC DỰA VÀO TIẾN ĐỘ VÀ ĐIỂM SỐ ---
     Color cardColor = Colors.white;
     Color borderColor = Colors.transparent;
     Color iconBgColor = themeColor;
+    Color scoreColor = Colors.grey.shade400; // Màu mặc định cho điểm số
+    IconData trailingIcon = Icons.lock_open; // Icon mặc định
 
     if (item.isCompleted) {
-      // Đã làm xong tất cả câu hỏi
-      cardColor = Colors.green.shade50;
-      borderColor = Colors.green.shade300;
-      iconBgColor = Colors.green;
+      // Đã làm xong tất cả câu hỏi -> Kiểm tra % chính xác
+      if (item.correctPercent < 70) {
+        // Dưới 70%: Tô màu đỏ
+        cardColor = Colors.red.shade50;
+        borderColor = Colors.red.shade300;
+        iconBgColor = Colors.red;
+        scoreColor = Colors.red.shade700;
+        trailingIcon = Icons.close; // Đổi icon thành dấu X nếu muốn, hoặc dùng Icons.warning
+      } else {
+        // Từ 70% trở lên: Tô màu xanh
+        cardColor = Colors.green.shade50;
+        borderColor = Colors.green.shade300;
+        iconBgColor = Colors.green;
+        scoreColor = Colors.green.shade700;
+        trailingIcon = Icons.check;
+      }
     } else if (item.isStarted) {
-      // Đang làm dở dang
+      // Đang làm dở dang: Giữ màu cam
       cardColor = Colors.orange.shade50;
       borderColor = Colors.orange.shade300;
       iconBgColor = Colors.orange;
+      scoreColor = Colors.orange.shade700;
+      // Khi đang làm dở, hiển thị số thứ tự, nên không cần trailingIcon ở cột trái
     }
 
     // Hiển thị % chính xác hoặc '--' nếu chưa làm
     String scoreDisplay = item.isStarted ? "${item.correctPercent}%" : "--";
-    Color scoreColor = item.isCompleted
-        ? Colors.green.shade700
-        : (item.isStarted ? Colors.orange.shade700 : Colors.grey.shade400);
     // --- KẾT THÚC LOGIC MÀU SẮC ---
 
     return GestureDetector(
@@ -232,14 +246,14 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
           ),
         );
 
-        _loadData();
+        _loadData(); // Cập nhật lại list sau khi làm bài xong
       },
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: cardColor, // Màu nền theo tiến độ
+          color: cardColor, // Màu nền theo tiến độ/điểm số
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor, width: 1.5), // Viền nổi bật nếu đã làm
+          border: Border.all(color: borderColor, width: 1.5), // Viền nổi bật
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
@@ -251,17 +265,17 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // CỘT TRÁI: Khung số thứ tự / Trạng thái
+            // CỘT TRÁI: Khung số thứ tự / Trạng thái (Tick xanh / X đỏ)
             Container(
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: iconBgColor, // Đổi màu icon theo trạng thái
+                color: iconBgColor, // Đổi màu icon
                 borderRadius: BorderRadius.circular(16),
               ),
               alignment: Alignment.center,
               child: item.isCompleted
-                  ? const Icon(Icons.check, color: Colors.white, size: 28) // Hiện dấu tick nếu xong
+                  ? Icon(trailingIcon, color: Colors.white, size: 28) // Hiện Tick xanh hoặc X đỏ
                   : Text(
                 index.toString(),
                 style: const TextStyle(
@@ -295,7 +309,7 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Hàng thông tin phụ
+                  // Hàng thông tin phụ (Số câu, thời gian, XP)
                   Row(
                     children: [
                       Text(
@@ -362,7 +376,7 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
                   Text(
                     scoreDisplay,
                     style: TextStyle(
-                      color: scoreColor,
+                      color: scoreColor, // Chữ điểm số sẽ đổi sang Đỏ hoặc Xanh
                       fontWeight: FontWeight.w900,
                       fontSize: 18,
                     ),
