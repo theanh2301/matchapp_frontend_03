@@ -427,8 +427,12 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Đã làm: ${widget.practice.totalAnswered}/${widget.practice.totalQuestions} câu",
-                        style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14),
+                        "Đúng: ${widget.practice.correctAnswers}/${widget.practice.totalQuestions} câu",
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
