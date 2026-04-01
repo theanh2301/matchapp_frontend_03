@@ -487,6 +487,7 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                                     title: "Làm lại: ${widget.practice.title}",
                                     userId: widget.userId,
                                     isRetryMistakes: true,
+                                    timeLimit: widget.practice.timeLimit,
                                   ),
                                 ),
                               );

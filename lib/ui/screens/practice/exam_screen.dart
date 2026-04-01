@@ -11,6 +11,7 @@ class QuizScreen extends StatefulWidget {
   final String title;
   final int userId;
   final bool isRetryMistakes;
+  final int timeLimit;
 
   const QuizScreen({
     super.key,
@@ -18,6 +19,7 @@ class QuizScreen extends StatefulWidget {
     required this.title,
     required this.userId,
     this.isRetryMistakes = false,
+    required this.timeLimit,
   });
 
   @override
@@ -33,7 +35,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // Quản lý trạng thái bài làm
   int currentQuestionIndex = 0;
-  int timeLeft = 300; // Mặc định 5 phút (Bạn có thể lấy timeLimit từ API overview truyền qua nếu có)
+  late int timeLeft;
   Timer? _timer;
   Map<int, int> selectedAnswers = {}; // Lưu đáp án: {questionIndex: optionIndex}
   bool isSubmitted = false; // Đã nộp bài chưa?
@@ -43,6 +45,7 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
+    timeLeft = widget.timeLimit * 60;
     _loadQuestions(); // Gọi API ngay khi mở màn hình
   }
 
@@ -229,8 +232,11 @@ class _QuizScreenState extends State<QuizScreen> {
                 isSubmitted = false;
                 selectedAnswers.clear();
                 currentQuestionIndex = 0;
-                timeLeft = 300; // Đặt lại 5 phút (Hoặc thay bằng biến thời gian gốc của bạn)
-                _startTimer(); // Bắt đầu đếm ngược lại
+
+                // 4. Sửa 300 thành biến thời gian động gốc
+                timeLeft = widget.timeLimit * 60;
+
+                _startTimer();
               });
             },
             child: const Text("Đồng ý", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),

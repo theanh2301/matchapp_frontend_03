@@ -227,6 +227,7 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
                   practiceId: item.id,
                   title: item.title,
                   userId: widget.userId,
+                  timeLimit: item.timeLimit,
                 ),
           ),
         );
