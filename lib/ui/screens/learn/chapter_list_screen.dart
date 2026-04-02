@@ -39,7 +39,7 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
   List<ChapterModel> _chapters = [];
 
   // TODO: Thay userId = 2 bằng ID thật của user đang đăng nhập
-  final int _currentUserId = 2;
+  final int _currentUserId = 1;
 
   @override
   void initState() {

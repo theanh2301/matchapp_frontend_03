@@ -131,7 +131,7 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
     setState(() => _isSaving = true);
 
     // TODO: Thay bằng ID user đang đăng nhập trong app của bạn
-    int currentUserId = 1;
+    int currentUserId = 3;
 
     String lastReviewedTime = DateTime.now().toString().substring(0, 19);
 
