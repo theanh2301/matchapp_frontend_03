@@ -33,7 +33,7 @@ class _LessonListScreenState extends State<LessonListScreen> {
   List<LessonModel> _lessons = [];
 
   // TODO: Thay userId bằng ID thật
-  final int _currentUserId = 2;
+  final int _currentUserId = 3;
 
   @override
   void initState() {
@@ -87,7 +87,6 @@ class _LessonListScreenState extends State<LessonListScreen> {
     );
 
     // Cập nhật trạng thái giả lập trên UI nếu chơi xong
-    // (Sau này bạn cần gọi thêm API để lưu trạng thái này lên Database)
     if (result == true) {
       setState(() {
         if (gameType == "flashcardsCompleted") _lessons[lessonIndex].isFlashcardDone = true;
@@ -113,7 +112,7 @@ class _LessonListScreenState extends State<LessonListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // HEADER THÔNG TIN CHƯƠNG (Giữ nguyên)
+            // HEADER THÔNG TIN CHƯƠNG
             Container(
               width: double.infinity,
               color: widget.themeColor,
@@ -141,7 +140,6 @@ class _LessonListScreenState extends State<LessonListScreen> {
     );
   }
 
-  // Khối logic hiển thị trạng thái API
   Widget _buildLessonsBody() {
     if (_isLoading) {
       return Padding(
@@ -181,7 +179,7 @@ class _LessonListScreenState extends State<LessonListScreen> {
         LessonModel lesson = entry.value;
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.only(bottom: 24),
           child: _buildLessonCard(
             index: index,
             lessonData: lesson,
@@ -197,133 +195,175 @@ class _LessonListScreenState extends State<LessonListScreen> {
     required LessonModel lessonData,
     required Color themeColor,
   }) {
-    // Cho phép tất cả đều sáng (Active) vì backend chưa có trường khoá bài học
     bool isActive = true;
 
-    Color cardBgColor = isActive ? themeColor.withOpacity(0.05) : Colors.grey.shade200.withOpacity(0.4);
-    Color cardBorderColor = isActive ? themeColor.withOpacity(0.4) : Colors.grey.shade300;
-    Color numberBgColor = isActive ? themeColor : Colors.grey.shade300;
+    // Đổi nền trắng của ô thành màu tím trong suốt (opacity 0.15)
+    Color cardBgColor = isActive ? themeColor.withOpacity(0.15) : Colors.grey.shade200.withOpacity(0.4);
+    Color cardBorderColor = isActive ? themeColor.withOpacity(0.3) : Colors.grey.shade300;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cardBgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cardBorderColor, width: 1.5),
-      ),
+    Color numberBgColor = isActive ? AppColors.white : Colors.grey.shade300;
+    Color numberBorderColor = isActive ? themeColor : Colors.grey.shade300;
+
+    return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // SỐ THỨ TỰ
+          // CỘT SỐ THỨ TỰ & ĐƯỜNG KẺ DỌC
           Column(
             children: [
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(color: numberBgColor, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: numberBgColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: numberBorderColor, width: 2),
+                ),
                 alignment: Alignment.center,
                 child: Text(
-                  (index + 1).toString(), // Dùng index + 1 làm số bài
-                  style: TextStyle(color: isActive ? AppColors.white : Colors.grey.shade600, fontSize: 18, fontWeight: FontWeight.bold),
+                  (index + 1).toString(),
+                  style: TextStyle(color: isActive ? themeColor : Colors.grey.shade600, fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               if (isActive) ...[
                 const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.only(right: 28.0),
-                  child: Container(width: 1.5, height: 40, color: cardBorderColor),
+                Expanded(
+                  child: Container(width: 1.5, color: cardBorderColor),
                 ),
+                const SizedBox(height: 8),
               ]
             ],
           ),
           const SizedBox(width: 16),
 
-          // NỘI DUNG CHÍNH
+          // NỘI DUNG CHÍNH CỦA CARD
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(lessonData.lessonName, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isActive ? Colors.black87 : Colors.grey.shade500)),
-                const SizedBox(height: 4),
-                Text(lessonData.description, style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    _buildGameTag(
-                      text: "Flashcards",
-                      isCompleted: lessonData.isFlashcardDone,
-                      isActive: isActive,
-                      onTap: () => _playGame(index, "flashcardsCompleted", "Lật thẻ Flashcard"),
-                    ),
-                    _buildGameTag(
-                      text: "Học tương tác",
-                      isCompleted: lessonData.isQuestionDone,
-                      isActive: isActive,
-                      onTap: () => _playGame(index, "interactiveCompleted", "Học tương tác"),
-                    ),
-                    _buildGameTag(
-                      text: "Ghép thẻ",
-                      isCompleted: lessonData.isMatchCardDone,
-                      isActive: isActive,
-                      onTap: () => _playGame(index, "matchingCompleted", "Ghép thẻ"),
-                    ),
-                  ],
-                ),
-              ],
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: cardBgColor, // Sử dụng nền tím trong suốt ở đây
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: cardBorderColor, width: 1.0),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // DÒNG 1: Tiêu đề và Tiến độ (2/3)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                            lessonData.lessonName,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isActive ? Colors.black87 : Colors.grey.shade500)
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Nút tiến độ 2/3 (Đổi nền sang trắng)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                            color: AppColors.white, // Nền trắng
+                            borderRadius: BorderRadius.circular(8)
+                        ),
+                        child: Text(
+                          "${lessonData.completedGamesCount}/3",
+                          style: TextStyle(color: themeColor, fontSize: 13, fontWeight: FontWeight.bold), // Chữ màu tím
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // DÒNG 2: Phụ đề
+                  Text(
+                      lessonData.description,
+                      style: TextStyle(fontSize: 14, color: Colors.black54)
+                  ),
+                  const SizedBox(height: 16),
+
+                  // DÒNG 3: DANH SÁCH GAME XẾP DỌC
+                  Column(
+                    children: [
+                      _buildGameOption(
+                        title: "Flashcard",
+                        iconData: Icons.style,
+                        isCompleted: lessonData.isFlashcardDone,
+                        themeColor: themeColor,
+                        onTap: () => _playGame(index, "flashcardsCompleted", "Lật thẻ"),
+                      ),
+                      _buildGameOption(
+                        title: "Quiz",
+                        iconData: Icons.auto_awesome,
+                        isCompleted: lessonData.isQuestionDone,
+                        themeColor: themeColor,
+                        onTap: () => _playGame(index, "interactiveCompleted", "Học tương tác"),
+                      ),
+                      _buildGameOption(
+                        title: "MatchCard",
+                        iconData: Icons.ads_click,
+                        isCompleted: lessonData.isMatchCardDone,
+                        themeColor: themeColor,
+                        onTap: () => _playGame(index, "matchingCompleted", "Ghép thẻ"),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-
-          // TIẾN ĐỘ THEO CHUẨN 3 GAME
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: isActive ? themeColor : Colors.grey.shade300, borderRadius: BorderRadius.circular(20)),
-                child: Text(
-                  "${lessonData.completedGamesCount}/3", // Tối đa 3 game con
-                  style: TextStyle(color: isActive ? AppColors.white : Colors.grey.shade600, fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Icon(Icons.chevron_right, color: Colors.grey.shade400),
-            ],
-          )
         ],
       ),
     );
   }
 
-  // WIDGET TAG GAME
-  Widget _buildGameTag({
-    required String text,
+  // WIDGET GIAO DIỆN NÚT BẤM GAME
+  Widget _buildGameOption({
+    required String title,
+    required IconData iconData,
     required bool isCompleted,
-    required bool isActive,
+    required Color themeColor,
     required VoidCallback onTap,
   }) {
-    Color iconColor = isCompleted ? AppColors.green : (isActive ? Colors.grey.shade600 : Colors.grey.shade400);
-    Color textColor = isCompleted ? AppColors.green : (isActive ? Colors.grey.shade600 : Colors.grey.shade400);
-    Color bgColor = isCompleted ? AppColors.green.withOpacity(0.08) : (isActive ? AppColors.white : Colors.transparent);
-    Color borderColor = isCompleted ? AppColors.green.withOpacity(0.4) : (isActive ? Colors.grey.shade300 : Colors.grey.shade200);
-    IconData icon = isCompleted ? Icons.check_circle_outline : Icons.radio_button_unchecked;
+    // Nếu chưa hoàn thành (isCompleted == false):
+    // Đổi item đang tím thành nền trắng (AppColors.white)
+    // Và chữ trắng thành chữ tím (themeColor) để dễ nhìn
+    final Color bgColor = isCompleted ? const Color(0xFFE6F9F0) : AppColors.white;
+    final Color contentColor = isCompleted ? const Color(0xFF00A86B) : themeColor;
+    final IconData trailingIcon = isCompleted ? Icons.check_circle_outline : Icons.chevron_right;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: isActive ? onTap : null,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: borderColor, width: 1.0)),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: iconColor, size: 14),
-              const SizedBox(width: 4),
-              Text(text, style: TextStyle(fontSize: 10.5, color: textColor, fontWeight: isCompleted ? FontWeight.bold : FontWeight.w500)),
-            ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(24),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                // Icon bên trái
+                Icon(iconData, color: contentColor, size: 20),
+                const SizedBox(width: 12),
+
+                // Tiêu đề game
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: contentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+
+                // Icon trạng thái bên phải
+                Icon(trailingIcon, color: contentColor, size: 20),
+              ],
+            ),
           ),
         ),
       ),
