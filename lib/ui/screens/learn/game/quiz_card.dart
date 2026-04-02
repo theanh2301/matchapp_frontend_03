@@ -77,7 +77,7 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
   void _onNextPressed() {
     // 1. Lưu đáp án vừa chọn vào hàng đợi
     // TODO: Thay bằng userId thực tế
-    int currentUserId = 3;
+    int currentUserId = 1;
 
     _submitQueue.add(QuizProgressRequest(
       userId: currentUserId,
