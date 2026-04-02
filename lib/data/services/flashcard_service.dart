@@ -44,9 +44,44 @@ class FlashcardService {
     }
   }
 
-  Future<bool> saveSingleProgress(FlashcardProgressRequest request) async {
+  Future<bool> saveMultipleProgress(List<FlashcardProgressRequest> requests) async {
+    // Nếu danh sách rỗng thì không cần gọi API
+    if (requests.isEmpty) {
+      print('⚠️ Không có thẻ nào để lưu.');
+      return true;
+    }
+
+    // Thay đổi URL thành endpoint batch của bạn
+    final url = Uri.parse('$baseUrl/progress/batch');
+
+    print('🚀 ĐANG GỌI API BATCH FLASHCARD: $url (Lưu ${requests.length} thẻ cùng lúc)');
+
+    try {
+      // Biến List<FlashcardProgressRequest> thành List<Map> để encode ra mảng JSON [{}, {}]
+      final List<Map<String, dynamic>> jsonData = requests.map((req) => req.toJson()).toList();
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(jsonData), // Convert mảng thành chuỗi JSON
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ Save ${requests.length} flashcards successfully');
+        return true;
+      } else {
+        print("❌ Lỗi lưu batch thẻ: Code ${response.statusCode} - ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Lỗi kết nối khi lưu batch thẻ: $e");
+      return false;
+    }
+  }
+
+ /* Future<bool> saveSingleProgress(FlashcardProgressRequest request) async {
     // Thay đổi URL thành domain/IP thực tế của backend
-    final url = Uri.parse('$baseUrl/progress');
+    final url = Uri.parse('$baseUrl/progress/batch');
 
     // 1. Thêm log thông báo BẮT ĐẦU gọi API
     print('🚀 ĐANG GỌI API FLASHCARD: $url (Lưu thẻ ID: ${request.flashcardId})');
@@ -77,6 +112,6 @@ class FlashcardService {
     for (var request in requests) {
       await saveSingleProgress(request);
     }
-  }
+  }*/
 
 }

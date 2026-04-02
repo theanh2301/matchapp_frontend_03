@@ -41,7 +41,43 @@ class QuizService {
     }
   }
 
-  Future<void> saveQuizProgress(List<QuizProgressRequest> requests) async {
+  Future<bool> saveQuizProgress(List<QuizProgressRequest> requests) async {
+    if (requests.isEmpty) {
+      print('⚠️ Không có câu trả lời Quiz nào để lưu.');
+      return true;
+    }
+
+    // ⚠️ LƯU Ý QUAN TRỌNG: Hãy đảm bảo URL này khớp với endpoint BATCH mới bên Spring Boot
+    // Ví dụ: tách riêng thành /progress/quiz/batch để không bị trùng lặp với Flashcard
+    final url = Uri.parse('$baseUrl/progress/batch');
+
+    print('🚀 ĐANG GỌI API BATCH QUIZ: $url (Lưu ${requests.length} câu hỏi cùng lúc)');
+
+    try {
+      // 1. Biến mảng Object thành mảng JSON [{}, {}, ...]
+      final List<Map<String, dynamic>> jsonData = requests.map((req) => req.toJson()).toList();
+
+      // 2. Gửi 1 request duy nhất
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(jsonData), // Encode toàn bộ mảng
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ Save ${requests.length} quiz progress successfully');
+        return true; // Trả về true để UI biết đã lưu thành công
+      } else {
+        print("❌ Lỗi lưu Quiz: Code ${response.statusCode} - ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Lỗi kết nối khi lưu Quiz: $e");
+      return false;
+    }
+  }
+
+  /*Future<void> saveQuizProgress(List<QuizProgressRequest> requests) async {
     // Thay đổi domain/IP phù hợp với môi trường của bạn
     final url = Uri.parse('$baseUrl/progress');
 
@@ -64,6 +100,6 @@ class QuizService {
         print("Lỗi kết nối khi lưu Quiz ${request.questionId}: $e");
       }
     }
-  }
+  }*/
 
 }

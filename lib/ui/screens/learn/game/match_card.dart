@@ -189,14 +189,16 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
     // TODO: Lấy User ID thực tế từ app
     int currentUserId = 1;
 
-    final request = MatchCardProgressRequest(
-      totalPairs: _totalPairs,
-      correctPairs: _totalPairs, // Nếu thắng thì số cặp đúng = tổng số cặp
-      timeTaken: _secondsElapsed,
-      totalXP: _score, // Tổng XP thưởng kiếm được
-      lessonId: widget.lessonId,
-      userId: currentUserId,
-    );
+    List<MatchCardProgressRequest> request = [
+      MatchCardProgressRequest(
+        totalPairs: _totalPairs,
+        correctPairs: _totalPairs,
+        timeTaken: _secondsElapsed,
+        totalXP: _score,
+        lessonId: widget.lessonId,
+        userId: currentUserId,
+      )
+    ];
 
     await _matchCardService.saveMatchCardProgress(request);
 

@@ -83,6 +83,7 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
       userId: currentUserId,
       questionId: _quizzes[_currentIndex].id, // Giả sử Model có thuộc tính id
       answerId: _quizzes[_currentIndex].answers[_selectedOptionIndex!].id, // Lấy id của đáp án được chọn
+      answeredAt: DateTime.now().toIso8601String()
     ));
 
     // 2. Kiểm tra nếu chưa hết câu hỏi thì qua câu mới

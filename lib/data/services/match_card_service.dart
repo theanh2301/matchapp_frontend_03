@@ -42,9 +42,9 @@ class MatchCardService {
     }
   }
 
-  Future<bool> saveMatchCardProgress(MatchCardProgressRequest request) async {
+  /*Future<bool> saveMatchCardProgress(MatchCardProgressRequest request) async {
     // Đổi lại URL thực tế của backend
-    final url = Uri.parse('$baseUrl/progress');
+    final url = Uri.parse('$baseUrl/progress/batch');
 
     print('🚀 ĐANG GỌI API MATCH CARD: $url');
 
@@ -66,7 +66,39 @@ class MatchCardService {
       print("Lỗi kết nối lưu Match Card: $e");
       return false;
     }
+  }*/
+
+  Future<bool> saveMatchCardProgress(List<MatchCardProgressRequest> requests) async {
+    if (requests.isEmpty) {
+      print('⚠️ Không có thẻ ghép nào để lưu.');
+      return true;
+    }
+
+    // Nhớ cập nhật URL khớp với Spring Boot mới đổi ở trên
+    final url = Uri.parse('$baseUrl/progress/batch');
+
+    print('🚀 ĐANG GỌI API MATCH CARD BATCH: $url (Lưu ${requests.length} kết quả)');
+
+    try {
+      // Chuyển danh sách Object thành mảng JSON
+      final List<Map<String, dynamic>> jsonData = requests.map((req) => req.toJson()).toList();
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(jsonData),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ Save ${requests.length} match card results successfully');
+        return true;
+      } else {
+        print("❌ Lỗi lưu Match Card: Code ${response.statusCode} - ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Lỗi kết nối lưu Match Card: $e");
+      return false;
+    }
   }
-
-
 }
