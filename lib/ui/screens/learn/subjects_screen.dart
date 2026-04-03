@@ -6,9 +6,11 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/models/subject_model.dart';
 import '../../../data/models/suggest_lesson_model.dart';
 import '../../../data/services/subject_service.dart';
-// TODO: Đảm bảo đường dẫn import này khớp với project của bạn
 import '../../../data/services/suggest_lesson_service.dart';
 import 'chapter_list_screen.dart';
+import 'game/flash_card.dart';
+import 'game/match_card.dart';
+import 'game/quiz_card.dart';
 
 class LearnScreen extends StatefulWidget {
   const LearnScreen({super.key});
@@ -34,7 +36,7 @@ class _LearnScreenState extends State<LearnScreen> {
   List<SuggestedLessonModel> _suggestedLessons = [];
 
   // TODO: Thay userId = 1 bằng ID thật của user đang đăng nhập
-  final int _currentUserId = 1;
+  final int _currentUserId = 3;
 
   @override
   void initState() {
@@ -331,15 +333,130 @@ class _LearnScreenState extends State<LearnScreen> {
         _buildTimelineItem(
           status: status,
           title: lesson.lessonName,
-          subtitle: "Bài học gợi ý", // Bạn có thể map thêm logic description từ API vào đây nếu có
+          subtitle: "Bài học gợi ý",
           number: (i + 1).toString(),
           isFirst: i == 0,
           isLast: i == _suggestedLessons.length - 1,
+
+          // Thêm sự kiện onTap vào đây
+          onTap: status != TimelineStatus.completed
+              ? () => _showGameOptions(context, lesson)
+              : null,
         ),
       );
     }
 
     return Column(children: items);
+  }
+
+  void _showGameOptions(BuildContext context, SuggestedLessonModel lesson) {
+    // TODO: Khi API Backend cập nhật thêm các trường chi tiết cho bài gợi ý,
+    // bạn hãy thay các biến false này bằng dữ liệu thật từ model nhé.
+    // Ví dụ: bool isFlashcardDone = lesson.isFlashcardDone;
+    bool isFlashcardDone = false;
+    bool isQuizDone = false;
+    bool isMatchDone = false;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // Tự động thu gọn theo nội dung
+            children: [
+              Text(
+                "Học: ${lesson.lessonName}",
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary),
+              ),
+              const SizedBox(height: 8),
+              const Text("Chọn phần bạn muốn học ngay", style: TextStyle(color: Colors.black54)),
+              const SizedBox(height: 24),
+
+              // Nút 1: Flashcard
+              _buildBottomSheetButton(
+                title: "Flashcards",
+                icon: Icons.style,
+                color: const Color(0xFF6C47FF),
+                isCompleted: isFlashcardDone, // Truyền trạng thái vào đây
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => FlashcardGameScreen(lessonId: lesson.lessonId)));
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Nút 2: Học tương tác (Quiz)
+              _buildBottomSheetButton(
+                title: "Học tương tác",
+                icon: Icons.auto_awesome,
+                color: const Color(0xFF6C47FF),
+                isCompleted: isQuizDone,
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => QuizGameScreen(lessonId: lesson.lessonId)));
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Nút 3: Ghép thẻ
+              _buildBottomSheetButton(
+                title: "Ghép thẻ",
+                icon: Icons.ads_click,
+                color: const Color(0xFF6C47FF),
+                isCompleted: isMatchDone,
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => MatchCardGameScreen(lessonId: lesson.lessonId)));
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Widget con hỗ trợ tạo nút bấm trong BottomSheet đã được nâng cấp
+  Widget _buildBottomSheetButton({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required bool isCompleted, // Thêm tham số kiểm tra hoàn thành
+    required VoidCallback onPressed,
+  }) {
+    // Nếu hoàn thành: Nền xanh nhạt, chữ và icon xanh lục.
+    // Nếu chưa: Nền trắng, viền và chữ tím.
+    final Color bgColor = isCompleted ? const Color(0xFFE6F9F0) : Colors.white;
+    final Color contentColor = isCompleted ? const Color(0xFF00A86B) : color;
+    final IconData trailingIcon = isCompleted ? Icons.check_circle : Icons.chevron_right;
+
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: bgColor,
+        foregroundColor: contentColor,
+        elevation: 0,
+        // Nếu đã hoàn thành thì bỏ viền, chưa hoàn thành thì hiện viền mờ
+        side: BorderSide(
+            color: isCompleted ? Colors.transparent : color.withOpacity(0.3),
+            width: 1.5
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
+      onPressed: onPressed,
+      child: Row(
+        children: [
+          Icon(icon, size: 24),
+          const SizedBox(width: 16),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+          Icon(trailingIcon), // Mũi tên hoặc Dấu tích
+        ],
+      ),
+    );
   }
 
   Widget _buildTopicCard({
@@ -436,6 +553,7 @@ class _LearnScreenState extends State<LearnScreen> {
     String? number,
     bool isFirst = false,
     bool isLast = false,
+    VoidCallback? onTap, // Thêm tham số onTap
   }) {
     Color borderColor;
     Color bgColor;
@@ -487,37 +605,52 @@ class _LearnScreenState extends State<LearnScreen> {
             ),
           ),
           const SizedBox(width: 12),
+
+          // Thẻ nội dung có thể bấm được
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: bgColor,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap, // Gọi hàm sự kiện khi bấm
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: borderColor, width: 1.5),
-                  boxShadow: status == TimelineStatus.current ? [BoxShadow(color: AppColors.primary.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))] : [],
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: status == TimelineStatus.upcoming ? Colors.grey.shade600 : Colors.black87)),
-                          const SizedBox(height: 4),
-                          Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
-                        ],
-                      ),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: borderColor, width: 1.5),
+                      boxShadow: status == TimelineStatus.current ? [BoxShadow(color: AppColors.primary.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))] : [],
                     ),
-                    if (status == TimelineStatus.current)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12)),
-                        child: const Text("Đang học", style: TextStyle(color: AppColors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                      )
-                  ],
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center, // Căn giữa theo chiều dọc
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: status == TimelineStatus.upcoming ? Colors.grey.shade600 : Colors.black87)),
+                              const SizedBox(height: 4),
+                              Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                            ],
+                          ),
+                        ),
+                        // Nút "Đang học" HOẶC Icon Play
+                        if (status == TimelineStatus.current)
+                          Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12)),
+                            child: const Text("Đang học", style: TextStyle(color: AppColors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                          ),
+
+                        // Thêm Icon điều hướng cho các mục chưa hoàn thành
+                        if (status != TimelineStatus.completed)
+                          Icon(Icons.play_circle_fill, color: AppColors.primary.withOpacity(0.8), size: 28),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
