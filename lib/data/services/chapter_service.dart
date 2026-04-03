@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
+import '../../core/constants/ApiConstants.dart';
 import '../models/chapter_model.dart'; // Để dùng debugPrint
 
 class ChapterService {
-  final String baseUrl = "http://10.0.2.2:8080/api/chapters";
+  final String baseUrl = "${ApiConstants.baseUrl}/chapters";
 
   // Hàm lấy danh sách chương của 1 môn học
   Future<List<ChapterModel>> getChaptersOverview(int userId, int subjectId) async {

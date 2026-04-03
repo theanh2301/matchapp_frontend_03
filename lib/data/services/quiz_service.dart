@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import '../../core/constants/ApiConstants.dart';
 import '../models/quiz_model.dart';
 import '../models/quiz_progress_model.dart';
 
 class QuizService {
   // TODO: Điều chỉnh URL cho khớp với API của bạn
-  final String baseUrl = "http://10.0.2.2:8080/api/quiz";
+  final String baseUrl = "${ApiConstants.baseUrl}/quiz";
 
   Future<List<QuizModel>> getQuizzesByLesson(int lessonId) async {
     try {

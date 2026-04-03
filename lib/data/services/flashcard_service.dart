@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import '../../core/constants/ApiConstants.dart';
 import '../models/flashcard_model.dart';
 import '../models/flashcard_progress_request.dart';
 
 class FlashcardService {
   // TODO: Thay thế bằng URL API thực tế của bạn
-  final String baseUrl = "http://10.0.2.2:8080/api/flashcards";
+  final String baseUrl = "${ApiConstants.baseUrl}/flashcards";
 
   Future<List<FlashcardModel>> getFlashcardsByLesson(int lessonId) async {
     try {

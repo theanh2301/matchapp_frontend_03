@@ -1,0 +1,7 @@
+// Tệp: lib/core/constants/api_constants.dart
+
+class ApiConstants {
+
+  static const String baseUrl = "http://10.0.2.2:8080/api";
+
+}

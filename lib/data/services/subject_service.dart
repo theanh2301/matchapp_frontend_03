@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../core/constants/ApiConstants.dart';
 import '../models/subject_model.dart';
 import 'package:flutter/foundation.dart'; // Để dùng debugPrint
 
 class SubjectService {
-  final String baseUrl = "http://10.0.2.2:8080/api/subjects/overview";
+  final String baseUrl = "${ApiConstants.baseUrl}/subjects/overview";
 
   Future<List<SubjectModel>> getSubjectsProgress(int userId, int gradeId) async {
     try {

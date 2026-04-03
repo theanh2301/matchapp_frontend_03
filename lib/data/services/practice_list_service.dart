@@ -3,9 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:learn_math_app_03/data/models/practice_list_model.dart';
 
+import '../../core/constants/ApiConstants.dart';
+
 class PracticeListService {
   // Lưu ý: Dùng 10.0.2.2 nếu chạy máy ảo Android, localhost nếu dùng web/iOS
-  final String baseUrl = "http://10.0.2.2:8080/api/practices";
+  final String baseUrl = "${ApiConstants.baseUrl}/practices";
 
   /// Gọi API lấy danh sách tổng quan. Đã thêm [userId]
   Future<List<PracticeListModel>> getPracticeOverview(String practiceType, int userId) async {

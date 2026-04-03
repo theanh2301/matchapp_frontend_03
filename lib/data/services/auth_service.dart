@@ -1,11 +1,12 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../core/constants/ApiConstants.dart';
 import '../models/user_model.dart';
 
 class AuthService {
   // Thay đổi URL này theo địa chỉ Backend của bạn
-  final String baseUrl = "http://192.168.0.103:8080/api/auth";
+  final String baseUrl = "${ApiConstants.baseUrl}/auth";
 
 
   // Hàm Đăng nhập

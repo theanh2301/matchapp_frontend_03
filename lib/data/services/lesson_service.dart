@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../core/constants/ApiConstants.dart';
 import '../models/lesson_model.dart';
 import 'package:flutter/foundation.dart'; // Để dùng debugPrint
 
 class LessonService {
-  final String baseUrl = "http://10.0.2.2:8080/api/lessons";
+  final String baseUrl = "${ApiConstants.baseUrl}/lessons";
 
   Future<List<LessonModel>> getLessonsOverview(int userId, int chapterId) async {
     try {

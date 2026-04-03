@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import '../../core/constants/ApiConstants.dart';
 import '../models/exam_model.dart';
 import '../models/practice_model.dart';
 import '../models/practice_progress_model.dart';
 
 
 class PracticeListService {
-  final String baseUrl = "http://10.0.2.2:8080/api/practices";
+  final String baseUrl = "${ApiConstants.baseUrl}/practices";
 
   /// Lấy danh sách câu hỏi cho một bài tập
   Future<List<PracticeQuestionModel>> getPracticeQuestions(int practiceId) async {

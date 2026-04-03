@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
+import '../../core/constants/ApiConstants.dart';
 import '../models/match_card_model.dart';
 import '../models/match_card_progress_model.dart';
 
 class MatchCardService {
   // TODO: Điều chỉnh URL cho khớp với API backend của bạn
-  final String baseUrl = "http://10.0.2.2:8080/api/match_cards";
+  final String baseUrl = "${ApiConstants.baseUrl}/match_cards";
 
   Future<List<MatchCardModel>> getMatchCardsByLesson(int lessonId) async {
     try {

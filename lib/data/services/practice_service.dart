@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import '../../core/constants/ApiConstants.dart';
 import '../models/practice_list_model.dart';
 import '../models/practice_model.dart';
 
 class PracticeService {
-  final String baseUrl = "http://10.0.2.2:8080/api/practices";
+  final String baseUrl = "${ApiConstants.baseUrl}/practices";
 
   // ... (Hàm getPracticeOverview cũ nằm ở đây) ...
 
