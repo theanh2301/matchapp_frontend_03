@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/subject_model.dart';
+import '../../../data/models/suggest_lesson_model.dart';
 import '../../../data/services/subject_service.dart';
+// TODO: Đảm bảo đường dẫn import này khớp với project của bạn
+import '../../../data/services/suggest_lesson_service.dart';
 import 'chapter_list_screen.dart';
 
 class LearnScreen extends StatefulWidget {
@@ -18,11 +21,17 @@ class _LearnScreenState extends State<LearnScreen> {
   final List<String> _grades = ['Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10', 'Lớp 11', 'Lớp 12'];
   int _selectedGradeIndex = 0; // Mặc định Lớp 10
 
-  // --- SERVICE & TRẠNG THÁI ---
+  // --- SERVICE & TRẠNG THÁI MÔN HỌC ---
   final SubjectService _learnService = SubjectService();
   bool _isLoading = true;
   bool _hasError = false;
   List<SubjectModel> _subjects = [];
+
+  // --- SERVICE & TRẠNG THÁI GỢI Ý HỌC TẬP ---
+  final SuggestedLessonService _suggestedService = SuggestedLessonService();
+  bool _isLoadingSuggested = true;
+  bool _hasErrorSuggested = false;
+  List<SuggestedLessonModel> _suggestedLessons = [];
 
   // TODO: Thay userId = 1 bằng ID thật của user đang đăng nhập
   final int _currentUserId = 1;
@@ -30,7 +39,13 @@ class _LearnScreenState extends State<LearnScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchSubjects();
+    _fetchAllData();
+  }
+
+  // Hàm gọi đồng thời hoặc lần lượt các API cần thiết
+  Future<void> _fetchAllData() async {
+    await _fetchSubjects();
+    await _fetchSuggestedLessons();
   }
 
   Future<void> _fetchSubjects() async {
@@ -41,7 +56,6 @@ class _LearnScreenState extends State<LearnScreen> {
 
     try {
       int subjectClass = _selectedGradeIndex + 6;
-
       final result = await _learnService.getSubjectsProgress(_currentUserId, subjectClass);
 
       if (mounted) {
@@ -57,7 +71,38 @@ class _LearnScreenState extends State<LearnScreen> {
           _isLoading = false;
         });
       }
-      debugPrint("API Error: $e");
+      debugPrint("API Error (Subjects): $e");
+    }
+  }
+
+  Future<void> _fetchSuggestedLessons() async {
+    setState(() {
+      _isLoadingSuggested = true;
+      _hasErrorSuggested = false;
+    });
+
+    try {
+      // TODO: Ở đây mình truyền tạm subjectId = 5 theo API bạn cung cấp.
+      // Nếu bạn muốn lấy id của môn học đầu tiên trong danh sách _subjects,
+      // bạn có thể đổi thành: int targetSubjectId = _subjects.isNotEmpty ? _subjects.first.subjectId : 5;
+      int targetSubjectId = 5;
+
+      final result = await _suggestedService.getSuggestedLessons(_currentUserId, targetSubjectId);
+
+      if (mounted) {
+        setState(() {
+          _suggestedLessons = result;
+          _isLoadingSuggested = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasErrorSuggested = true;
+          _isLoadingSuggested = false;
+        });
+      }
+      debugPrint("API Error (Suggested Lessons): $e");
     }
   }
 
@@ -96,7 +141,7 @@ class _LearnScreenState extends State<LearnScreen> {
                           onTap: () {
                             if (!isSelected) {
                               setState(() => _selectedGradeIndex = index);
-                              _fetchSubjects();
+                              _fetchAllData(); // Gọi lại khi đổi lớp
                             }
                           },
                           child: Container(
@@ -159,7 +204,7 @@ class _LearnScreenState extends State<LearnScreen> {
               Text("Vui lòng kiểm tra lại kết nối mạng của bạn.", style: TextStyle(color: Colors.grey.shade600)),
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                onPressed: _fetchSubjects,
+                onPressed: _fetchAllData,
                 icon: const Icon(Icons.refresh),
                 label: const Text("Thử lại"),
                 style: ElevatedButton.styleFrom(
@@ -190,7 +235,6 @@ class _LearnScreenState extends State<LearnScreen> {
         const SizedBox(height: 16),
 
         ..._subjects.map((subject) {
-
           Color iconColor = AppColors.primary;
           IconData iconData = Icons.calculate_outlined;
 
@@ -224,15 +268,80 @@ class _LearnScreenState extends State<LearnScreen> {
 
         const Text("Lộ trình học tập (Gợi ý)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
-        _buildTimelineItem(status: TimelineStatus.completed, title: "Phương trình bậc 2", subtitle: "Công thức nghiệm và ứng dụng", isFirst: true),
-        _buildTimelineItem(status: TimelineStatus.current, title: "Định lý Vi-et", subtitle: "Mối liên hệ giữa nghiệm và hệ số", number: "2"),
-        _buildTimelineItem(status: TimelineStatus.upcoming, title: "Hệ phương trình", subtitle: "Phương pháp thế", number: "3", isLast: true),
+
+        // ==========================================
+        // KHU VỰC HIỂN THỊ GỢI Ý TỪ API
+        // ==========================================
+        _buildSuggestedLessonsSection(),
+
         const SizedBox(height: 40),
       ],
     );
   }
 
-  // Widget con: Thẻ Chủ đề (Đã bỏ logic isLocked)
+  // Khối logic kết xuất danh sách gợi ý
+  Widget _buildSuggestedLessonsSection() {
+    if (_isLoadingSuggested) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (_hasErrorSuggested) {
+      return Center(
+        child: Column(
+          children: [
+            const Text("Lỗi tải gợi ý học tập", style: TextStyle(color: Colors.red)),
+            TextButton(
+              onPressed: _fetchSuggestedLessons,
+              child: const Text("Tải lại gợi ý"),
+            )
+          ],
+        ),
+      );
+    }
+
+    if (_suggestedLessons.isEmpty) {
+      return const Text("Không có bài học gợi ý nào lúc này.", style: TextStyle(color: Colors.grey));
+    }
+
+    List<Widget> items = [];
+    bool foundCurrent = false; // Biến đánh dấu đã tìm thấy bài học "đang học" chưa
+
+    for (int i = 0; i < _suggestedLessons.length; i++) {
+      final lesson = _suggestedLessons[i];
+      TimelineStatus status;
+
+      if (lesson.isCompleted) {
+        // Đã học
+        status = TimelineStatus.completed;
+      } else if (!foundCurrent) {
+        // Bài đầu tiên chưa học -> Đang học
+        status = TimelineStatus.current;
+        foundCurrent = true;
+      } else {
+        // Các bài chưa học phía sau -> Sắp học
+        status = TimelineStatus.upcoming;
+      }
+
+      items.add(
+        _buildTimelineItem(
+          status: status,
+          title: lesson.lessonName,
+          subtitle: "Bài học gợi ý", // Bạn có thể map thêm logic description từ API vào đây nếu có
+          number: (i + 1).toString(),
+          isFirst: i == 0,
+          isLast: i == _suggestedLessons.length - 1,
+        ),
+      );
+    }
+
+    return Column(children: items);
+  }
+
   Widget _buildTopicCard({
     required String title,
     required String subtitle,
@@ -245,7 +354,6 @@ class _LearnScreenState extends State<LearnScreen> {
   }) {
     return GestureDetector(
       onTap: () {
-        // Luôn cho phép chuyển trang
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -303,7 +411,6 @@ class _LearnScreenState extends State<LearnScreen> {
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                   ),
                   const SizedBox(height: 8),
-                  // Luôn hiển thị thanh tiến độ
                   LinearProgressIndicator(
                     value: progress,
                     backgroundColor: Colors.grey.shade200,
