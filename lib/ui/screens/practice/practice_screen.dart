@@ -173,7 +173,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     const SizedBox(height: 16),
 
                     // ==========================================
-                    // 4. AI GỢI Ý LUYỆN TẬP (ĐÃ KHÔI PHỤC)
+                    // 4. AI GỢI Ý LUYỆN TẬP
                     // ==========================================
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -234,7 +234,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 20), // Thêm khoảng trống cuối màn hình
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -245,7 +245,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
     );
   }
 
-  // Khôi phục lại Widget buildCard của bạn
   Widget _buildChallengeCard({
     required BuildContext context, required String practiceType, required Future<PracticeModel> futureStats,
     required IconData icon, required Color iconBgColor, required String title,
@@ -355,8 +354,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
         });
   }
 }
+
 // =====================================================================
-// WIDGET THẺ ĐỀ CẦN CẢI THIỆN
+// WIDGET THẺ ĐỀ CẦN CẢI THIỆN ĐÃ ĐƯỢC CẬP NHẬT
 // =====================================================================
 class WeakPracticeCard extends StatefulWidget {
   final PracticeListModel practice;
@@ -376,6 +376,15 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
 
   Future<List<dynamic>>? _wrongQuestionsFuture;
 
+  // Thêm ScrollController để quản lý thanh cuộn
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _onExpansionChanged(bool expanded) {
     setState(() {
       _isExpanded = expanded;
@@ -388,7 +397,6 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Thêm viền màu nổi bật bên trái
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
@@ -401,7 +409,7 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
         child: Container(
           decoration: const BoxDecoration(
             border: Border(
-              left: BorderSide(color: Color(0xFFFF2A5F), width: 6), // Viền trái màu đỏ hồng giống thiết kế
+              left: BorderSide(color: Color(0xFFFF2A5F), width: 6),
             ),
           ),
           child: Theme(
@@ -411,41 +419,31 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
               tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 20),
 
-              // ==============================
-              // HEADER CỦA BÀI LUYỆN TẬP
-              // ==============================
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Badge tên bài tập (VD: Phương trình bậc 2)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFE8EC), // Nền hồng nhạt
+                      color: const Color(0xFFFFE8EC),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       widget.practice.title,
                       style: const TextStyle(
-                        color: Color(0xFFFF2A5F), // Chữ đỏ hồng
+                        color: Color(0xFFFF2A5F),
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // Dòng thống kê tổng quan
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         "Đúng: ${widget.practice.correctAnswers}/${widget.practice.totalQuestions} câu",
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: TextStyle(color: Colors.grey.shade700, fontSize: 13, fontWeight: FontWeight.w500),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -460,9 +458,6 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                 ],
               ),
 
-              // ==============================
-              // NỘI DUNG XỔ XUỐNG (CÁC CÂU SAI)
-              // ==============================
               children: [
                 if (_isExpanded && _wrongQuestionsFuture != null)
                   FutureBuilder<List<dynamic>>(
@@ -480,22 +475,11 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                       }
 
                       return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // 1. Danh sách các câu hỏi làm sai
-                          ...snapshot.data!.map((mistake) {
-                            return _buildMistakeDetailItem(
-                              // Thay bằng các tên biến mới đã được cập nhật trong Model
-                              question: mistake.questionContent,
-                              userAnswer: mistake.userAnswerContent,
-                              correctAnswer: mistake.correctAnswerContent,
-                            );
-                          }).toList(),
-
-                          const SizedBox(height: 24),
-
-                          // 2. Nút "Học lại khái niệm này" ở dưới cùng
-                          GestureDetector(
-                            onTap: () {
+                          // 1. NÚT "LÀM LẠI CÁC CÂU SAI" CHUYỂN LÊN TRÊN VÀ THIẾT KẾ LẠI
+                          ElevatedButton.icon(
+                            onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -511,20 +495,52 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                                 widget.onRefresh();
                               });
                             },
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Học lại khái niệm này",
-                                  style: TextStyle(
-                                    color: Color(0xFF6C47FF), // Màu tím đậm giống thiết kế
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                            icon: const Icon(Icons.refresh, size: 20),
+                            label: const Text(
+                              "Làm lại các câu sai",
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF6C47FF), // Màu tím
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+                          const Divider(height: 1),
+                          const SizedBox(height: 8),
+
+                          // 2. KHU VỰC CUỘN DANH SÁCH CÂU SAI
+                          ConstrainedBox(
+                            // Giới hạn chiều cao tối đa (khoảng 300px), nếu dài hơn sẽ tự cuộn
+                            constraints: const BoxConstraints(maxHeight: 320),
+                            child: RawScrollbar(
+                              controller: _scrollController,
+                              thumbColor: Colors.grey.shade400,
+                              radius: const Radius.circular(8),
+                              thickness: 4,
+                              child: SingleChildScrollView(
+                                controller: _scrollController,
+                                physics: const ClampingScrollPhysics(), // Giúp cuộn mượt hơn trong ExpansionTile
+                                child: Padding(
+                                  // Padding bên phải một chút để tránh dính thanh cuộn
+                                  padding: const EdgeInsets.only(right: 8.0, bottom: 8.0),
+                                  child: Column(
+                                    children: snapshot.data!.map((mistake) {
+                                      return _buildMistakeDetailItem(
+                                        question: mistake.questionContent,
+                                        userAnswer: mistake.userAnswerContent,
+                                        correctAnswer: mistake.correctAnswerContent,
+                                      );
+                                    }).toList(),
                                   ),
                                 ),
-                                SizedBox(width: 8),
-                                Icon(Icons.arrow_right_alt, color: Color(0xFF6C47FF)),
-                              ],
+                              ),
                             ),
                           ),
                         ],
@@ -539,54 +555,48 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
     );
   }
 
-  // Widget hiển thị từng câu sai
   Widget _buildMistakeDetailItem({required String question, required String userAnswer, required String correctAnswer}) {
     return Container(
       margin: const EdgeInsets.only(top: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tiêu đề câu hỏi
           Text(
             "Giải phương trình: $question",
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFF1E293B)),
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF1E293B)),
           ),
-          const SizedBox(height: 12),
-
-          // Khung xám chứa đáp án
+          const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC), // Nền xám nhạt
+              color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
             ),
             child: Column(
               children: [
-                // Hàng "Bạn:"
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(
-                      width: 60,
-                      child: Text("Bạn:", style: TextStyle(color: Color(0xFFFF2A5F), fontWeight: FontWeight.bold, fontSize: 15)),
+                      width: 50,
+                      child: Text("Bạn:", style: TextStyle(color: Color(0xFFFF2A5F), fontWeight: FontWeight.bold, fontSize: 14)),
                     ),
                     Expanded(
-                      child: Text(userAnswer, style: const TextStyle(color: Color(0xFF475569), fontSize: 15, fontWeight: FontWeight.w500)),
+                      child: Text(userAnswer, style: const TextStyle(color: Color(0xFF475569), fontSize: 14, fontWeight: FontWeight.w500)),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-
-                // Hàng "Đúng:"
+                const SizedBox(height: 8),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(
-                      width: 60,
-                      child: Text("Đúng:", style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 15)),
+                      width: 50,
+                      child: Text("Đúng:", style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 14)),
                     ),
                     Expanded(
-                      child: Text(correctAnswer, style: const TextStyle(color: Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.w600)),
+                      child: Text(correctAnswer, style: const TextStyle(color: Color(0xFF1E293B), fontSize: 14, fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),
