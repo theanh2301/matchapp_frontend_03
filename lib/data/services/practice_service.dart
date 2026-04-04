@@ -8,12 +8,11 @@ import '../models/practice_model.dart';
 class PracticeService {
   final String baseUrl = "${ApiConstants.baseUrl}/practices";
 
-  // ... (Hàm getPracticeOverview cũ nằm ở đây) ...
-
   /// Lấy thống kê tiến độ của một loại bài tập
-  Future<PracticeModel> getPracticeStats(String practiceType, int userId) async {
+  Future<AllPracticeStatsModel> getAllPracticeStats(int userId) async {
     try {
-      final Uri url = Uri.parse('$baseUrl/stats?practiceType=$practiceType&userId=$userId');
+      // Lưu ý kiểm tra lại URL API của bạn cho chính xác
+      final Uri url = Uri.parse('$baseUrl/stats?userId=$userId');
       debugPrint("🚀 ĐANG GỌI API STATS: $url");
 
       final response = await http.get(
@@ -24,22 +23,15 @@ class PracticeService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (response.body.isEmpty) {
           debugPrint("⚠️ Server trả về body rỗng.");
-          return PracticeModel(practiceType: practiceType, totalPractice: 0, completedPractice: 0);
+          return _emptyStats(); // Trả về dữ liệu trống an toàn
         }
 
         final dynamic decodedData = jsonDecode(utf8.decode(response.bodyBytes));
         debugPrint("🚀 Call stats successfully");
 
+        // Trực tiếp truyền cục JSON vào hàm fromJson của class tổng
         if (decodedData is Map<String, dynamic>) {
-          if (decodedData.containsKey('data') && decodedData['data'] is Map<String, dynamic>) {
-            return PracticeModel.fromJson(decodedData['data']);
-          } else if (decodedData.containsKey('result') && decodedData['result'] is Map<String, dynamic>) {
-            return PracticeModel.fromJson(decodedData['result']);
-          } else if (decodedData.containsKey('practiceType')) {
-            return PracticeModel.fromJson(decodedData);
-          } else {
-            return PracticeModel(practiceType: practiceType, totalPractice: 0, completedPractice: 0);
-          }
+          return AllPracticeStatsModel.fromJson(decodedData);
         } else {
           throw Exception("Định dạng dữ liệu lạ, mong đợi một Object Map<String, dynamic>.");
         }
@@ -48,14 +40,23 @@ class PracticeService {
       }
     } catch (e) {
       debugPrint("❌ LỖI LẤY STATS: $e");
-      return PracticeModel(practiceType: practiceType, totalPractice: 0, completedPractice: 0);
+      return _emptyStats();
     }
   }
 
+// Hàm phụ trợ tạo dữ liệu rỗng an toàn khi có lỗi mạng/server
+  AllPracticeStatsModel _emptyStats() {
+    return AllPracticeStatsModel(
+      dailyStats: PracticeModel(practiceType: 'DAILY', totalPractice: 0, completedPractice: 0),
+      topicStats: PracticeModel(practiceType: 'TOPIC', totalPractice: 0, completedPractice: 0),
+      challengeStats: PracticeModel(practiceType: 'CHALLENGE', totalPractice: 0, completedPractice: 0),
+    );
+  }
+
   /// Gọi API lấy danh sách các đề cần cải thiện (yếu)
-  Future<List<PracticeListModel>> getWeakPractices(String practiceType, int userId) async {
+  Future<List<PracticeListModel>> getWeakPractices(int userId) async {
     try {
-      final Uri url = Uri.parse('$baseUrl/overview/weak?practiceType=$practiceType&userId=$userId');
+      final Uri url = Uri.parse('$baseUrl/overview/weak?userId=$userId');
       debugPrint("🚀 ĐANG GỌI API LẤY ĐỀ YẾU: $url");
 
       final response = await http.get(

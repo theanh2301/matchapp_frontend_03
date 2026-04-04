@@ -17,9 +17,7 @@ class PracticeScreen extends StatefulWidget {
 class _PracticeScreenState extends State<PracticeScreen> {
   final PracticeService _practiceService = PracticeService();
 
-  late Future<PracticeModel> _dailyStatsFuture;
-  late Future<PracticeModel> _topicStatsFuture;
-  late Future<PracticeModel> _challengeStatsFuture;
+  late Future<AllPracticeStatsModel> _allStatsFuture;
 
   // Future chứa danh sách các đề yếu (gọi API weak)
   late Future<List<PracticeListModel>> _weakTestsFuture;
@@ -33,10 +31,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   void _loadData() {
-    _dailyStatsFuture = _practiceService.getPracticeStats('DAILY', currentUserId);
-    _topicStatsFuture = _practiceService.getPracticeStats('TOPIC', currentUserId);
-    _challengeStatsFuture = _practiceService.getPracticeStats('CHALLENGE', currentUserId);
-    _weakTestsFuture = _practiceService.getWeakPractices('TOPIC', currentUserId);
+    _allStatsFuture = _practiceService.getAllPracticeStats(currentUserId);
+    _weakTestsFuture = _practiceService.getWeakPractices(currentUserId);
   }
 
   void _refreshData() {
@@ -65,13 +61,28 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   bottomRight: Radius.circular(30),
                 ),
               ),
-              padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 40),
+              padding: const EdgeInsets.only(
+                top: 60,
+                left: 24,
+                right: 24,
+                bottom: 40,
+              ),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Luyện tập", style: TextStyle(color: AppColors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Luyện tập",
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   SizedBox(height: 4),
-                  Text("Rèn luyện kỹ năng giải toán", style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  Text(
+                    "Rèn luyện kỹ năng giải toán",
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
                 ],
               ),
             ),
@@ -86,22 +97,67 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildChallengeCard(
-                      context: context, practiceType: 'DAILY', futureStats: _dailyStatsFuture,
-                      icon: Icons.calendar_today, iconBgColor: AppColors.orange,
-                      title: "Luyện theo ngày", subtitle: "Học đều đặn mỗi ngày để tiến bộ", themeColor: AppColors.orange,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildChallengeCard(
-                      context: context, practiceType: 'TOPIC', futureStats: _topicStatsFuture,
-                      icon: Icons.adjust, iconBgColor: AppColors.primary,
-                      title: "Luyện theo chủ đề", subtitle: "Rèn luyện chuyên sâu từng chủ đề", themeColor: AppColors.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildChallengeCard(
-                      context: context, practiceType: 'CHALLENGE', futureStats: _challengeStatsFuture,
-                      icon: Icons.emoji_events, iconBgColor: AppColors.purple,
-                      title: "Thử thách", subtitle: "Thách thức bản thân với các đề khó", themeColor: AppColors.purple,
+                    FutureBuilder<AllPracticeStatsModel>(
+                      // Thay bằng Model thật
+                      future: _allStatsFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(40.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Center(child: Text("Lỗi: ${snapshot.error}"));
+                        } else if (!snapshot.hasData) {
+                          return const SizedBox();
+                        }
+
+                        final allData = snapshot.data!;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildChallengeCard(
+                              context: context,
+                              practiceType: 'DAILY',
+                              statsData: allData.dailyStats,
+                              // Truyền trực tiếp data
+                              icon: Icons.calendar_today,
+                              iconBgColor: AppColors.orange,
+                              title: "Luyện theo ngày",
+                              subtitle: "Học đều đặn mỗi ngày để tiến bộ",
+                              themeColor: AppColors.orange,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildChallengeCard(
+                              context: context,
+                              practiceType: 'TOPIC',
+                              statsData: allData.topicStats,
+                              // Truyền trực tiếp data
+                              icon: Icons.adjust,
+                              iconBgColor: AppColors.primary,
+                              title: "Luyện theo chủ đề",
+                              subtitle: "Rèn luyện chuyên sâu từng chủ đề",
+                              themeColor: AppColors.primary,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildChallengeCard(
+                              context: context,
+                              practiceType: 'CHALLENGE',
+                              statsData: allData.challengeStats,
+                              // Truyền trực tiếp data
+                              icon: Icons.emoji_events,
+                              iconBgColor: AppColors.purple,
+                              title: "Thử thách",
+                              subtitle: "Thách thức bản thân với các đề khó",
+                              themeColor: AppColors.purple,
+                            ),
+                          ],
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 32),
@@ -111,9 +167,19 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     // ==========================================
                     Row(
                       children: [
-                        Icon(Icons.query_stats, color: Colors.red.shade400, size: 20),
+                        Icon(
+                          Icons.query_stats,
+                          color: Colors.red.shade400,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
-                        const Text("Đề cần cải thiện", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const Text(
+                          "Đề cần cải thiện",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -121,35 +187,47 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     FutureBuilder<List<PracticeListModel>>(
                       future: _weakTestsFuture,
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(20.0),
-                                child: CircularProgressIndicator(),
-                              )
+                            child: Padding(
+                              padding: EdgeInsets.all(20.0),
+                              child: CircularProgressIndicator(),
+                            ),
                           );
                         } else if (snapshot.hasError) {
                           return Center(
-                              child: Text("Lỗi tải dữ liệu: ${snapshot.error}", style: const TextStyle(color: Colors.red))
+                            child: Text(
+                              "Lỗi tải dữ liệu: ${snapshot.error}",
+                              style: const TextStyle(color: Colors.red),
+                            ),
                           );
-                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
                           // Hiển thị giao diện khi không có đề yếu nào
                           return Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                                color: Colors.green.shade50,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.green.shade200)
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.green.shade200),
                             ),
                             child: Column(
                               children: [
-                                Icon(Icons.check_circle_outline, size: 40, color: Colors.green.shade400),
+                                Icon(
+                                  Icons.check_circle_outline,
+                                  size: 40,
+                                  color: Colors.green.shade400,
+                                ),
                                 const SizedBox(height: 8),
                                 Text(
                                   "Tuyệt vời! Bạn không có đề nào dưới mức trung bình.",
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    color: Colors.green.shade700,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
@@ -158,14 +236,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
                         // Hiển thị danh sách WeakPracticeCard nếu có dữ liệu
                         return Column(
-                          children: snapshot.data!.map((practice) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: WeakPracticeCard(
-                              practice: practice,
-                              userId: currentUserId,
-                              onRefresh: _refreshData,
-                            ),
-                          )).toList(),
+                          children: snapshot.data!
+                              .map(
+                                (practice) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 16.0),
+                                  child: WeakPracticeCard(
+                                    practice: practice,
+                                    userId: currentUserId,
+                                    onRefresh: _refreshData,
+                                  ),
+                                ),
+                              )
+                              .toList(),
                         );
                       },
                     ),
@@ -196,7 +278,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                   color: Colors.white.withOpacity(0.2),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.psychology, color: AppColors.white, size: 24),
+                                child: const Icon(
+                                  Icons.psychology,
+                                  color: AppColors.white,
+                                  size: 24,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               const Text(
@@ -212,7 +298,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           const SizedBox(height: 12),
                           const Text(
                             "Bạn nên luyện thêm Định lý Vi-et để nâng cao độ chính xác từ 65% lên 85%.",
-                            style: TextStyle(color: Colors.white, fontSize: 13, height: 1.5),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              height: 1.5,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           SizedBox(
@@ -221,13 +311,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.white,
                                 foregroundColor: AppColors.purple,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               onPressed: () {},
-                              child: const Text("Bắt đầu luyện tập", style: TextStyle(fontWeight: FontWeight.bold)),
+                              child: const Text(
+                                "Bắt đầu luyện tập",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                             ),
                           ),
                         ],
@@ -246,112 +341,136 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   Widget _buildChallengeCard({
-    required BuildContext context, required String practiceType, required Future<PracticeModel> futureStats,
-    required IconData icon, required Color iconBgColor, required String title,
-    required String subtitle, required Color themeColor,
+    required BuildContext context,
+    required String practiceType,
+    required PracticeModel
+    statsData, // ĐỔI: Nhận thẳng cục data, không nhận Future nữa
+    required IconData icon,
+    required Color iconBgColor,
+    required String title,
+    required String subtitle,
+    required Color themeColor,
   }) {
-    return FutureBuilder<PracticeModel>(
-        future: futureStats,
-        builder: (context, snapshot) {
-          String displayProgressText = "Đang tải...";
-          double displayProgressValue = 0.0;
+    // Không cần FutureBuilder nữa, dùng thẳng dữ liệu truyền vào
+    String displayProgressText = "${statsData.progressText} đề hoàn thành";
+    double displayProgressValue = statsData.progressPercent;
 
-          if (snapshot.hasData) {
-            final data = snapshot.data!;
-            displayProgressText = "${data.progressText} đề hoàn thành";
-            displayProgressValue = data.progressPercent;
-          }
-
-          return Container(
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                )
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PracticeListScreen(
-                        title: title,
-                        subtitle: subtitle,
-                        themeColor: themeColor,
-                        headerIcon: icon,
-                        practiceType: practiceType,
-                        userId: currentUserId,
-                      ),
-                    ),
-                  ).then((_) {
-                    _refreshData();
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PracticeListScreen(
+                  title: title,
+                  subtitle: subtitle,
+                  themeColor: themeColor,
+                  headerIcon: icon,
+                  practiceType: practiceType,
+                  userId: currentUserId,
+                ),
+              ),
+            ).then((_) {
+              _refreshData();
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, color: AppColors.white, size: 32),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: iconBgColor,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(icon, color: AppColors.white, size: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right,
+                            color: Colors.grey.shade400,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  title,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
-                                ),
-                                Icon(Icons.chevron_right, color: Colors.grey.shade400),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(displayProgressText, style: TextStyle(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
-                                Text("${(displayProgressValue * 100).toInt()}%", style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            LinearProgressIndicator(
-                              value: displayProgressValue,
-                              backgroundColor: Colors.grey.shade200,
-                              color: themeColor,
-                              minHeight: 6,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ],
+                      const SizedBox(height: 6),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 14,
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            displayProgressText,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            "${(displayProgressValue * 100).toInt()}%",
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: displayProgressValue,
+                        backgroundColor: Colors.grey.shade200,
+                        color: themeColor,
+                        minHeight: 6,
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
-          );
-        });
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -363,11 +482,15 @@ class WeakPracticeCard extends StatefulWidget {
   final int userId;
   final VoidCallback onRefresh;
 
-  const WeakPracticeCard({super.key, required this.practice, required this.userId,required this.onRefresh,});
+  const WeakPracticeCard({
+    super.key,
+    required this.practice,
+    required this.userId,
+    required this.onRefresh,
+  });
 
   @override
   State<WeakPracticeCard> createState() => _WeakPracticeCardState();
-
 }
 
 class _WeakPracticeCardState extends State<WeakPracticeCard> {
@@ -389,7 +512,10 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
     setState(() {
       _isExpanded = expanded;
       if (expanded && _wrongQuestionsFuture == null) {
-        _wrongQuestionsFuture = _practiceListService.getWrongQuestionsDetail(widget.practice.id, widget.userId);
+        _wrongQuestionsFuture = _practiceListService.getWrongQuestionsDetail(
+          widget.practice.id,
+          widget.userId,
+        );
       }
     });
   }
@@ -401,7 +527,11 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: ClipRRect(
@@ -416,14 +546,24 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               onExpansionChanged: _onExpansionChanged,
-              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 20),
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              childrenPadding: const EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: 20,
+              ),
 
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFE8EC),
                       borderRadius: BorderRadius.circular(20),
@@ -443,14 +583,28 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                     children: [
                       Text(
                         "Đúng: ${widget.practice.correctAnswers}/${widget.practice.totalQuestions} câu",
-                        style: TextStyle(color: Colors.grey.shade700, fontSize: 13, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: Text(
                           "${widget.practice.correctPercent}%",
-                          style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold, fontSize: 14),
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ],
@@ -498,10 +652,14 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                             icon: const Icon(Icons.refresh, size: 20),
                             label: const Text(
                               "Làm lại các câu sai",
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6C47FF), // Màu tím
+                              backgroundColor: const Color(0xFF6C47FF),
+                              // Màu tím
                               foregroundColor: Colors.white,
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -526,16 +684,21 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                               thickness: 4,
                               child: SingleChildScrollView(
                                 controller: _scrollController,
-                                physics: const ClampingScrollPhysics(), // Giúp cuộn mượt hơn trong ExpansionTile
+                                physics: const ClampingScrollPhysics(),
+                                // Giúp cuộn mượt hơn trong ExpansionTile
                                 child: Padding(
                                   // Padding bên phải một chút để tránh dính thanh cuộn
-                                  padding: const EdgeInsets.only(right: 8.0, bottom: 8.0),
+                                  padding: const EdgeInsets.only(
+                                    right: 8.0,
+                                    bottom: 8.0,
+                                  ),
                                   child: Column(
                                     children: snapshot.data!.map((mistake) {
                                       return _buildMistakeDetailItem(
                                         question: mistake.questionContent,
                                         userAnswer: mistake.userAnswerContent,
-                                        correctAnswer: mistake.correctAnswerContent,
+                                        correctAnswer:
+                                            mistake.correctAnswerContent,
                                       );
                                     }).toList(),
                                   ),
@@ -555,7 +718,11 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
     );
   }
 
-  Widget _buildMistakeDetailItem({required String question, required String userAnswer, required String correctAnswer}) {
+  Widget _buildMistakeDetailItem({
+    required String question,
+    required String userAnswer,
+    required String correctAnswer,
+  }) {
     return Container(
       margin: const EdgeInsets.only(top: 16),
       child: Column(
@@ -563,7 +730,11 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
         children: [
           Text(
             "Giải phương trình: $question",
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF1E293B)),
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+              color: Color(0xFF1E293B),
+            ),
           ),
           const SizedBox(height: 10),
           Container(
@@ -580,10 +751,24 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                   children: [
                     const SizedBox(
                       width: 50,
-                      child: Text("Bạn:", style: TextStyle(color: Color(0xFFFF2A5F), fontWeight: FontWeight.bold, fontSize: 14)),
+                      child: Text(
+                        "Bạn:",
+                        style: TextStyle(
+                          color: Color(0xFFFF2A5F),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                     Expanded(
-                      child: Text(userAnswer, style: const TextStyle(color: Color(0xFF475569), fontSize: 14, fontWeight: FontWeight.w500)),
+                      child: Text(
+                        userAnswer,
+                        style: const TextStyle(
+                          color: Color(0xFF475569),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -593,10 +778,24 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                   children: [
                     const SizedBox(
                       width: 50,
-                      child: Text("Đúng:", style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 14)),
+                      child: Text(
+                        "Đúng:",
+                        style: TextStyle(
+                          color: Color(0xFF10B981),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                     Expanded(
-                      child: Text(correctAnswer, style: const TextStyle(color: Color(0xFF1E293B), fontSize: 14, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        correctAnswer,
+                        style: const TextStyle(
+                          color: Color(0xFF1E293B),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
