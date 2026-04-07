@@ -3,21 +3,20 @@ import 'package:learn_math_app_03/ui/screens/practice/practice_screen.dart';
 import 'package:learn_math_app_03/ui/screens/profile/profile_screen.dart';
 import 'package:learn_math_app_03/ui/screens/progress/progress_screen.dart';
 import '../../core/theme/app_colors.dart';
+import '../../data/services/auth_service.dart';
 import 'home/home_screen.dart';
 import 'learn/subjects_screen.dart';
 
 class MainScreen extends StatefulWidget {
-  // 1. Thêm các biến này vào MainScreen.
-  // Cài đặt giá trị mặc định (tạm thời) để bạn có thể test ngay mà không bị lỗi.
   final int userId;
   final String userName;
   final String className;
 
   const MainScreen({
     super.key,
-    this.userId = 1,                  // Dữ liệu tạm
-    this.userName = 'Thế Anh',        // Dữ liệu tạm
-    this.className = 'Lớp 10',        // Dữ liệu tạm
+    this.userId = 1,
+    this.userName = 'Học sinh',
+    this.className = 'Lớp 10',
   });
 
   @override
@@ -26,21 +25,22 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-
-  // 2. Khai báo _screens với từ khóa 'late' (sẽ khởi tạo sau)
   late List<Widget> _screens;
-
-  // Mở file main_screen.dart, tìm đến hàm initState() và sửa lại như sau:
 
   @override
   void initState() {
     super.initState();
 
+    int currentUserId = AuthService.userId ?? widget.userId;
+    int currentGradeId = AuthService.gradeId ?? 10;
+    String currentClassName = AuthService.gradeId != null ? "Lớp ${AuthService.gradeId}" : widget.className;
+    String currentUserName = AuthService.userId != null ? "ID: $currentUserId" : widget.userName;
+
     _screens = [
       HomeScreen(
-        userId: widget.userId,
-        userName: widget.userName,
-        className: widget.className,
+        userId: currentUserId,
+        userName: currentUserName,
+        className: currentClassName,
         onNavigateToLearn: () {
           setState(() {
             _currentIndex = 1;
@@ -52,10 +52,10 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
       ),
-      const LearnScreen(),    // Tab 1
-      const PracticeScreen(), // Tab 2
-      const ProgressScreen(), // Tab 3
-      const ProfileScreen()   // Tab 4
+      LearnScreen(userId: currentUserId, gradeId: currentGradeId),
+      PracticeScreen(userId: currentUserId, gradeId: currentGradeId),
+      ProgressScreen(userId: currentUserId, gradeId: currentGradeId),
+      ProfileScreen(userId: currentUserId, gradeId: currentGradeId)
     ];
   }
 

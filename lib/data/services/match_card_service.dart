@@ -2,12 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
-import '../../core/constants/ApiConstants.dart';
+import '../../core/constants/api_constants.dart';
 import '../models/match_card_model.dart';
 import '../models/match_card_progress_model.dart';
 
 class MatchCardService {
-  // TODO: Điều chỉnh URL cho khớp với API backend của bạn
   final String baseUrl = "${ApiConstants.baseUrl}/match_cards";
 
   Future<List<MatchCardModel>> getMatchCardsByLesson(int lessonId) async {
@@ -17,7 +16,7 @@ class MatchCardService {
 
       final response = await http.get(
         url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        headers: ApiConstants.getAuthHeaders(),
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -43,50 +42,22 @@ class MatchCardService {
     }
   }
 
-  /*Future<bool> saveMatchCardProgress(MatchCardProgressRequest request) async {
-    // Đổi lại URL thực tế của backend
-    final url = Uri.parse('$baseUrl/progress/batch');
-
-    print('🚀 ĐANG GỌI API MATCH CARD: $url');
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(request.toJson()),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        print('🚀 Call match card progress successfully');
-        return true;
-      } else {
-        print("Lỗi lưu tiến độ Match Card: ${response.body}");
-        return false;
-      }
-    } catch (e) {
-      print("Lỗi kết nối lưu Match Card: $e");
-      return false;
-    }
-  }*/
-
   Future<bool> saveMatchCardProgress(List<MatchCardProgressRequest> requests) async {
     if (requests.isEmpty) {
       print('⚠️ Không có thẻ ghép nào để lưu.');
       return true;
     }
 
-    // Nhớ cập nhật URL khớp với Spring Boot mới đổi ở trên
     final url = Uri.parse('$baseUrl/progress/batch');
 
     print('🚀 ĐANG GỌI API MATCH CARD BATCH: $url (Lưu ${requests.length} kết quả)');
 
     try {
-      // Chuyển danh sách Object thành mảng JSON
       final List<Map<String, dynamic>> jsonData = requests.map((req) => req.toJson()).toList();
 
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: ApiConstants.getAuthHeaders(),
         body: jsonEncode(jsonData),
       );
 

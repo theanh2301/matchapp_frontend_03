@@ -13,6 +13,9 @@ class LessonListScreen extends StatefulWidget {
   final String progressText;
   final Color themeColor;
 
+  final int userId;
+  final int gradeId;
+
   const LessonListScreen({
     super.key,
     required this.chapterId,
@@ -20,6 +23,9 @@ class LessonListScreen extends StatefulWidget {
     required this.chapterSubtitle,
     required this.progressText,
     required this.themeColor,
+
+    required this.userId,
+    required this.gradeId,
   });
 
   @override
@@ -31,9 +37,6 @@ class _LessonListScreenState extends State<LessonListScreen> {
   bool _isLoading = true;
   bool _hasError = false;
   List<LessonModel> _lessons = [];
-
-  // TODO: Thay userId bằng ID thật
-  final int _currentUserId = 3;
 
   @override
   void initState() {
@@ -48,7 +51,7 @@ class _LessonListScreenState extends State<LessonListScreen> {
     });
 
     try {
-      final result = await _learnService.getLessonsOverview(_currentUserId, widget.chapterId);
+      final result = await _learnService.getLessonsOverview(widget.userId, widget.chapterId);
       if (mounted) {
         setState(() {
           _lessons = result;
@@ -72,13 +75,13 @@ class _LessonListScreenState extends State<LessonListScreen> {
 
     switch (gameType) {
       case "flashcardsCompleted":
-        destination = FlashcardGameScreen(lessonId: currentLessonId);
+        destination = FlashcardGameScreen(lessonId: currentLessonId, userId: widget.userId,);
         break;
       case "interactiveCompleted":
-        destination = QuizGameScreen(lessonId: currentLessonId);
+        destination = QuizGameScreen(lessonId: currentLessonId, userId: widget.userId);
         break;
       default:
-        destination = MatchCardGameScreen(lessonId: currentLessonId);
+        destination = MatchCardGameScreen(lessonId: currentLessonId, userId: widget.userId);
     }
 
     final result = await Navigator.push(

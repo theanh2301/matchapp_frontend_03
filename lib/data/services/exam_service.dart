@@ -1,16 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import '../../core/constants/ApiConstants.dart';
+import '../../core/constants/api_constants.dart';
 import '../models/exam_model.dart';
 import '../models/practice_model.dart';
 import '../models/practice_progress_model.dart';
 
-
 class PracticeListService {
   final String baseUrl = "${ApiConstants.baseUrl}/practices";
 
-  /// Lấy danh sách câu hỏi cho một bài tập
   Future<List<PracticeQuestionModel>> getPracticeQuestions(int practiceId) async {
     try {
       final Uri url = Uri.parse('$baseUrl/$practiceId');
@@ -18,7 +16,7 @@ class PracticeListService {
 
       final response = await http.get(
         url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        headers: ApiConstants.getAuthHeaders(),
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -52,7 +50,6 @@ class PracticeListService {
     }
   }
 
-  /// Lưu tiến độ làm bài
   Future<void> saveQuizProgress(List<PracticeProgressRequest> requests) async {
     final url = Uri.parse('$baseUrl/progress');
 
@@ -62,7 +59,7 @@ class PracticeListService {
       try {
         final response = await http.post(
           url,
-          headers: {'Content-Type': 'application/json'},
+          headers: ApiConstants.getAuthHeaders(),
           body: jsonEncode(request.toJson()),
         );
 
@@ -77,9 +74,6 @@ class PracticeListService {
     }
   }
 
-  /// Gọi API lấy chi tiết các câu làm sai
-  /// Đã đổi kiểu trả về từ List<dynamic> sang List<WrongQuestionModel>
-  /// 1. API cho màn hình List (Hiển thị text chi tiết câu sai)
   Future<List<WrongQuestionModel>> getWrongQuestionsDetail(int practiceId, int userId) async {
     try {
       final Uri url = Uri.parse('$baseUrl/$practiceId/wrong-questions-detail?userId=$userId');
@@ -87,7 +81,7 @@ class PracticeListService {
 
       final response = await http.get(
         url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        headers: ApiConstants.getAuthHeaders(),
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -101,7 +95,6 @@ class PracticeListService {
           rawList = decodedData['data'];
         }
 
-        // Map sang WrongQuestionModel mới
         return rawList.map((item) => WrongQuestionModel.fromJson(item as Map<String, dynamic>)).toList();
       } else {
         throw Exception("Lỗi server ${response.statusCode}");
@@ -111,7 +104,6 @@ class PracticeListService {
     }
   }
 
-  /// 2. API cho màn hình Exam (Để làm lại câu sai)
   Future<List<PracticeQuestionModel>> getWrongQuestionsForExam(int practiceId, int userId) async {
     try {
       final Uri url = Uri.parse('$baseUrl/$practiceId/wrong-questions-exam?userId=$userId');
@@ -119,7 +111,7 @@ class PracticeListService {
 
       final response = await http.get(
         url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        headers: ApiConstants.getAuthHeaders(),
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -133,7 +125,6 @@ class PracticeListService {
           rawList = decodedData['data'];
         }
 
-        // Map sang PracticeQuestionModel để QuizScreen dùng được luôn
         return rawList.map((item) => PracticeQuestionModel.fromJson(item as Map<String, dynamic>)).toList();
       } else {
         throw Exception("Lỗi server ${response.statusCode}");
@@ -142,5 +133,4 @@ class PracticeListService {
       throw Exception("Lỗi lấy dữ liệu exam câu sai: $e");
     }
   }
-
 }

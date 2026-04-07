@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../core/constants/ApiConstants.dart';
+import '../../core/constants/api_constants.dart';
 import '../models/lesson_model.dart';
-import 'package:flutter/foundation.dart'; // Để dùng debugPrint
+import 'package:flutter/foundation.dart';
 
 class LessonService {
   final String baseUrl = "${ApiConstants.baseUrl}/lessons";
@@ -14,7 +14,7 @@ class LessonService {
 
       final response = await http.get(
         url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        headers: ApiConstants.getAuthHeaders(),
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200 || response.statusCode == 201) {

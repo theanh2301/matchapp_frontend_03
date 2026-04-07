@@ -7,16 +7,20 @@ import '../../../data/models/dashboard_model.dart';
 import '../../../data/services/dashboard_service.dart';
 
 class ProgressScreen extends StatefulWidget {
-  const ProgressScreen({super.key});
+  final int userId;
+  final int gradeId;
 
-  final int userId = 1;
+  const ProgressScreen({
+    super.key,
+    required this.userId,
+    required this.gradeId,
+  });
 
   @override
   State<ProgressScreen> createState() => _ProgressScreenState();
 }
 
 class _ProgressScreenState extends State<ProgressScreen> {
-  final int userId = 1;
   final DashboardService _service = DashboardService();
   DashboardResponse? _dashboardData;
   bool _isLoading = true;
@@ -26,7 +30,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   @override
   void initState() {
     super.initState();
-    _currentSelectedDate = DateTime.now(); // Mặc định lấy ngày hôm nay
+    _currentSelectedDate = DateTime.now();
     _fetchData();
   }
 
@@ -45,12 +49,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      // Khi có lỗi API, reset data về null để UI tự hiển thị số 0
       setState(() {
         _dashboardData = null;
         _isLoading = false;
       });
-      // Hiển thị thông báo lỗi thân thiện thay vì làm hỏng màn hình
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -62,7 +64,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
     }
   }
 
-  // --- HÀM XỬ LÝ CHUYỂN TUẦN ---
   void _previousWeek() {
     setState(() {
       _currentSelectedDate = _currentSelectedDate.subtract(
@@ -73,7 +74,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
   }
 
   void _nextWeek() {
-    // Có thể chặn không cho xem tuần tương lai nếu muốn
     if (_currentSelectedDate
         .add(const Duration(days: 7))
         .isAfter(DateTime.now())) {
@@ -94,40 +94,34 @@ class _ProgressScreenState extends State<ProgressScreen> {
       backgroundColor: AppColors.bgLight,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-      // Bỏ đoạn check _errorMessage đi, luôn gọi _buildContent để render UI mặc định
           : _buildContent(),
     );
   }
 
   Widget _buildContent() {
-    // Sử dụng null-aware để lấy dữ liệu an toàn
     final stats = _dashboardData?.stats;
     final weeklyXp = _dashboardData?.weeklyXp ?? [];
 
-    // Tính tổng XP trong tuần (nếu list rỗng thì trả về 0)
     int totalXpThisWeek = weeklyXp.isEmpty
         ? 0
         : weeklyXp.fold(0, (sum, item) => sum + item.totalXp);
 
-    // Tìm mức XP cao nhất để cấu hình trục Y cho biểu đồ
-    double maxY = 100; // Giá trị mặc định
+    double maxY = 100;
     if (weeklyXp.isNotEmpty) {
       double maxDataY = weeklyXp.map((e) => e.totalXp.toDouble()).reduce(max);
       if (maxDataY > 0) maxY = maxDataY * 1.2;
     }
 
-    // Xác định số cột biểu đồ: Nếu có dữ liệu thì lấy độ dài list, nếu không thì mặc định 7 ngày
     int chartLength = weeklyXp.isNotEmpty ? weeklyXp.length : 7;
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. HEADER
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
-              color: Colors.green, // AppColors.green
+              color: Colors.green,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
@@ -158,8 +152,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
               ],
             ),
           ),
-
-          // 2. LƯỚI THỐNG KÊ TỔNG QUAN
           Transform.translate(
             offset: const Offset(0, -20),
             child: Padding(
@@ -174,7 +166,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                           icon: Icons.track_changes,
                           iconBg: Colors.blue.withOpacity(0.1),
                           iconColor: Colors.blue,
-                          // Gán giá trị mặc định là 0 nếu stats null
                           value: "${stats?.totalLesson ?? 0}",
                           label: "Bài đã học",
                         ),
@@ -215,10 +206,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 32),
-
-                  // 3. BIỂU ĐỒ HOẠT ĐỘNG
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -255,7 +243,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                 ),
                               ],
                             ),
-                            // NÚT CHUYỂN TUẦN
                             Row(
                               children: [
                                 IconButton(
@@ -285,8 +272,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                           ],
                         ),
                         const SizedBox(height: 24),
-
-                        // KHỐI VẼ BIỂU ĐỒ
                         GestureDetector(
                           onHorizontalDragEnd: (details) {
                             if (details.primaryVelocity! > 0) {
@@ -336,7 +321,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                           DateTime date = DateTime.parse(weeklyXp[index].date);
                                           text = _getWeekdayString(date.weekday);
                                         } else {
-                                          // Hiển thị T2 -> CN nếu mảng API rỗng
                                           text = _getWeekdayString(index + 1);
                                         }
 
@@ -361,7 +345,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                 gridData: const FlGridData(show: false),
                                 borderData: FlBorderData(show: false),
                                 barGroups: List.generate(chartLength, (index) {
-                                  // Nếu có dữ liệu thì lấy, không thì biểu đồ trả về 0
                                   double yValue = weeklyXp.isNotEmpty
                                       ? weeklyXp[index].totalXp.toDouble()
                                       : 0.0;
@@ -371,12 +354,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             ),
                           ),
                         ),
-
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 16),
                           child: Divider(height: 1, color: Colors.black12),
                         ),
-
                         Center(
                           child: RichText(
                             text: TextSpan(
@@ -400,10 +381,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       ],
                     ),
                   ),
-
-                  // ==========================================
-                  // 4. ĐÁNH GIÁ NĂNG LỰC
-                  // ==========================================
+                  const SizedBox(height: 32),
                   Row(
                     children: [
                       Icon(
@@ -422,8 +400,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Các phần đánh giá năng lực bên dưới hoàn toàn có thể truyền giá trị 0
-                  // thông qua các logic lấy dữ liệu tương tự ở đây trong tương lai.
                   _buildSkillCard(
                     title: "Đại số",
                     badgeText: "Khá",
@@ -459,12 +435,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     changeText: "0% tuần này",
                     changeColor: Colors.grey,
                   ),
-
                   const SizedBox(height: 32),
-
-                  // ==========================================
-                  // 5. THÀNH TÍCH
-                  // ==========================================
                   Row(
                     children: [
                       Icon(
@@ -482,7 +453,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       ),
                     ],
                   ),
-
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -535,12 +505,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 24),
-
-                  // ==========================================
-                  // 6. PHÂN TÍCH AI
-                  // ==========================================
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(

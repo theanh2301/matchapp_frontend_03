@@ -1,35 +1,32 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import '../../core/constants/ApiConstants.dart';
+import '../../core/constants/api_constants.dart';
 import '../models/practice_list_model.dart';
 import '../models/practice_model.dart';
 
 class PracticeService {
   final String baseUrl = "${ApiConstants.baseUrl}/practices";
 
-  /// Lấy thống kê tiến độ của một loại bài tập
   Future<AllPracticeStatsModel> getAllPracticeStats(int userId) async {
     try {
-      // Lưu ý kiểm tra lại URL API của bạn cho chính xác
       final Uri url = Uri.parse('$baseUrl/stats?userId=$userId');
       debugPrint("🚀 ĐANG GỌI API STATS: $url");
 
       final response = await http.get(
         url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        headers: ApiConstants.getAuthHeaders(),
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (response.body.isEmpty) {
           debugPrint("⚠️ Server trả về body rỗng.");
-          return _emptyStats(); // Trả về dữ liệu trống an toàn
+          return _emptyStats();
         }
 
         final dynamic decodedData = jsonDecode(utf8.decode(response.bodyBytes));
         debugPrint("🚀 Call stats successfully");
 
-        // Trực tiếp truyền cục JSON vào hàm fromJson của class tổng
         if (decodedData is Map<String, dynamic>) {
           return AllPracticeStatsModel.fromJson(decodedData);
         } else {
@@ -44,7 +41,6 @@ class PracticeService {
     }
   }
 
-// Hàm phụ trợ tạo dữ liệu rỗng an toàn khi có lỗi mạng/server
   AllPracticeStatsModel _emptyStats() {
     return AllPracticeStatsModel(
       dailyStats: PracticeModel(practiceType: 'DAILY', totalPractice: 0, completedPractice: 0),
@@ -53,7 +49,6 @@ class PracticeService {
     );
   }
 
-  /// Gọi API lấy danh sách các đề cần cải thiện (yếu)
   Future<List<PracticeListModel>> getWeakPractices(int userId) async {
     try {
       final Uri url = Uri.parse('$baseUrl/overview/weak?userId=$userId');
@@ -61,7 +56,7 @@ class PracticeService {
 
       final response = await http.get(
         url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        headers: ApiConstants.getAuthHeaders(),
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -73,7 +68,6 @@ class PracticeService {
         final dynamic decodedData = jsonDecode(utf8.decode(response.bodyBytes));
         debugPrint("🚀 Lấy danh sách đề yếu thành công!");
 
-        // Xử lý linh hoạt cấu trúc JSON trả về từ Backend
         List<dynamic> rawList = [];
         if (decodedData is List) {
           rawList = decodedData;
@@ -87,7 +81,6 @@ class PracticeService {
           }
         }
 
-        // Parse danh sách dynamic thành List<PracticeListModel>
         return rawList.map((item) => PracticeListModel.fromJson(item as Map<String, dynamic>)).toList();
 
       } else {

@@ -1,18 +1,20 @@
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../core/constants/ApiConstants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/constants/api_constants.dart';
 import '../models/user_model.dart';
 
 class AuthService {
-  // Thay đổi URL này theo địa chỉ Backend của bạn
-  final String baseUrl = "${ApiConstants.baseUrl}/auth";
+  static String? token;
+  static int? userId;
+  static int? gradeId;
+  static String? role;
 
+  static final String _baseUrl = "${ApiConstants.baseUrl}/auth";
 
-  // Hàm Đăng nhập
-  Future<UserModel> login(String email, String password) async {
+  static Future<UserModel> login(String email, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/login'),
+      Uri.parse('$_baseUrl/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': email,
@@ -21,24 +23,26 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
-      // Thành công, trả về dữ liệu User
-      return UserModel.fromJson(jsonDecode(response.body));
+      final decodedData = jsonDecode(response.body);
+      final authData = decodedData['data'];
+
+      await saveAuthData(authData);
+
+      return UserModel.fromJson(authData);
     } else {
-      // Thất bại, quăng lỗi để UI xử lý
       final error = jsonDecode(response.body);
       throw Exception(error['message'] ?? 'Đăng nhập thất bại');
     }
   }
 
-  // Hàm Đăng ký
-  Future<bool> register(
+  static Future<bool> register(
       String fullName,
       String email,
       String password,
       String confirmPassword,
       ) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/register'),
+      Uri.parse('$_baseUrl/register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'fullName': fullName,
@@ -55,4 +59,46 @@ class AuthService {
       throw Exception(error['message'] ?? 'Đăng ký thất bại');
     }
   }
+
+  /// Lưu dữ liệu (Gọi tự động bên trong hàm login)
+  static Future<void> saveAuthData(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Lưu vào ổ cứng điện thoại
+    await prefs.setString('token', data['token'] ?? '');
+    await prefs.setInt('userId', data['userId'] ?? 0);
+    await prefs.setInt('gradeId', data['gradeId'] ?? 0);
+    await prefs.setString('role', data['role'] ?? 'USER');
+
+    // Cập nhật ngay vào RAM
+    token = data['token'];
+    userId = data['userId'];
+    gradeId = data['gradeId'];
+    role = data['role'];
+  }
+
+  /// Nạp dữ liệu từ ổ cứng lên RAM (Phải gọi hàm này ở main.dart)
+  static Future<void> loadAuthData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    token = prefs.getString('token');
+    userId = prefs.getInt('userId');
+    gradeId = prefs.getInt('gradeId');
+    role = prefs.getString('role');
+  }
+
+  /// Đăng xuất
+  static Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Xóa sạch dữ liệu trên ổ cứng
+
+    // Reset RAM về null
+    token = null;
+    userId = null;
+    gradeId = null;
+    role = null;
+  }
+
+  /// Getter kiểm tra xem người dùng đã đăng nhập chưa
+  static bool get isLoggedIn => token != null && token!.isNotEmpty;
 }

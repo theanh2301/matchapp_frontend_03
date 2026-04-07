@@ -7,22 +7,33 @@ import '../../../../data/models/flashcard_progress_request.dart';
 import '../../../../data/services/flashcard_service.dart';
 
 class FlashcardGameScreen extends StatelessWidget {
-  final int lessonId; // Nhận ID bài học từ màn hình LessonListScreen
+  final int lessonId;
+  final int userId;
 
-  const FlashcardGameScreen({super.key, required this.lessonId});
+  const FlashcardGameScreen({
+    super.key,
+    required this.lessonId,
+    required this.userId,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Theme(
       data: ThemeData.dark(),
-      child: MathFlashcardScreen(lessonId: lessonId),
+      child: MathFlashcardScreen(lessonId: lessonId, userId: userId),
     );
   }
 }
 
 class MathFlashcardScreen extends StatefulWidget {
   final int lessonId;
-  const MathFlashcardScreen({super.key, required this.lessonId});
+  final int userId;
+
+  const MathFlashcardScreen({
+    super.key,
+    required this.lessonId,
+    required this.userId,
+  });
 
   @override
   State<MathFlashcardScreen> createState() => _MathFlashcardScreenState();
@@ -43,7 +54,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
   int _memorizedCount = 0;
   final List<CardSwiperDirection> _swipeHistory = [];
   final List<Map<String, dynamic>> _swipeResults = [];
-
 
   @override
   void initState() {
@@ -85,12 +95,10 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
     setState(() {
       _swipeHistory.add(direction);
 
-      // Ghi nhận trạng thái thẻ (Phải = Biết, Trái = Không biết)
       bool isKnown = direction == CardSwiperDirection.right;
 
-      // Lưu lại kết quả của thẻ vừa quẹt (Giả sử FlashcardModel có thuộc tính id)
       _swipeResults.add({
-        'flashcardId': _cards[previousIndex].id, // Đảm bảo gọi đúng tên biến ID của thẻ
+        'flashcardId': _cards[previousIndex].id,
         'isKnown': isKnown,
       });
 
@@ -104,13 +112,11 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
     return true;
   }
 
-  // --- CẬP NHẬT HÀM _onUndo ---
   bool _onUndo(int? previousIndex, int currentIndex, CardSwiperDirection direction) {
     setState(() {
       if (_swipeHistory.isNotEmpty) {
         final lastDirection = _swipeHistory.removeLast();
 
-        // Gỡ bỏ kết quả của thẻ cuối cùng khỏi danh sách chuẩn bị gửi API
         if (_swipeResults.isNotEmpty) {
           _swipeResults.removeLast();
         }
@@ -126,12 +132,8 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
     return true;
   }
 
-  // --- HÀM LƯU KẾT QUẢ ---
   Future<void> _handleFinishDeck(VoidCallback onSuccess) async {
     setState(() => _isSaving = true);
-
-    // TODO: Thay bằng ID user đang đăng nhập trong app của bạn
-    int currentUserId = 3;
 
     String lastReviewedTime = DateTime.now().toString().substring(0, 19);
 
@@ -139,13 +141,12 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
       return FlashcardProgressRequest(
         isKnown: data['isKnown'],
         lastReviewed: lastReviewedTime,
-        totalXP: 0, // Backend đã tự tính XP nên ta truyền 0
+        totalXP: 0,
         flashcardId: data['flashcardId'],
-        userId: currentUserId,
+        userId: widget.userId,
       );
     }).toList();
 
-    // Gọi API thông qua service
     await _flashcardService.saveMultipleProgress(requests);
 
     if (mounted) {
@@ -168,7 +169,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // 1. TOP BAR
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                 child: Row(
@@ -186,8 +186,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
                   ],
                 ),
               ),
-
-              // 2. THANH TIẾN TRÌNH
               SizedBox(
                 height: 4,
                 child: LinearProgressIndicator(
@@ -197,7 +195,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
               Expanded(
                 child: _buildBodyContent(),
               ),
@@ -235,7 +232,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
 
     return Column(
       children: [
-        // SCORE BAR
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Row(
@@ -247,8 +243,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
           ),
         ),
         const SizedBox(height: 16),
-
-        // THẺ QUẸT
         Expanded(
           child: Stack(
             children: [
@@ -280,8 +274,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
             ],
           ),
         ),
-
-        // THANH ĐIỀU HƯỚNG DƯỚI
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           child: Row(
@@ -398,7 +390,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
     );
   }
 
-  // --- CẬP NHẬT MÀN HÌNH FINISHED ---
   Widget _buildFinishedScreen() {
     return Center(
       child: Column(
@@ -408,8 +399,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
           const SizedBox(height: 20),
           const Text("Bạn đã hoàn thành!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 30),
-
-          // Hiển thị loading nếu đang gọi API
           if (_isSaving)
             const CircularProgressIndicator(color: Colors.greenAccent)
           else
@@ -432,7 +421,7 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
                         _notMemorizedCount = 0;
                         _memorizedCount = 0;
                         _swipeHistory.clear();
-                        _swipeResults.clear(); // Xóa lịch sử sau khi đã lưu thành công
+                        _swipeResults.clear();
                         _resetKey++;
                       });
                     });
@@ -450,7 +439,6 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
                   icon: const Icon(Icons.arrow_forward),
                   label: const Text("Tiếp theo", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   onPressed: () {
-                    // Lưu dữ liệu rồi mới thoát màn hình
                     _handleFinishDeck(() {
                       Navigator.pop(context, true);
                     });

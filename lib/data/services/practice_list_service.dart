@@ -3,22 +3,19 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:learn_math_app_03/data/models/practice_list_model.dart';
 
-import '../../core/constants/ApiConstants.dart';
+import '../../core/constants/api_constants.dart';
 
 class PracticeListService {
-  // Lưu ý: Dùng 10.0.2.2 nếu chạy máy ảo Android, localhost nếu dùng web/iOS
   final String baseUrl = "${ApiConstants.baseUrl}/practices";
 
-  /// Gọi API lấy danh sách tổng quan. Đã thêm [userId]
   Future<List<PracticeListModel>> getPracticeOverview(String practiceType, int userId) async {
     try {
-      // Nối thêm &userId=$userId vào chuỗi query
       final Uri url = Uri.parse('$baseUrl/overview?practiceType=$practiceType&userId=$userId');
       debugPrint("🚀 ĐANG GỌI API OVERVIEW: $url");
 
       final response = await http.get(
         url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        headers: ApiConstants.getAuthHeaders(),
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200 || response.statusCode == 201) {

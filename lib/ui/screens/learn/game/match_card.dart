@@ -6,9 +6,8 @@ import '../../../../data/models/match_card_model.dart';
 import '../../../../data/models/match_card_progress_model.dart';
 import '../../../../data/services/match_card_service.dart';
 
-// MÔ HÌNH DỮ LIỆU THẺ DÙNG CHO GIAO DIỆN
 class MatchCard {
-  final int id; // ID duy nhất cho UI
+  final int id;
   final String text;
   final int pairId;
   final int xpReward;
@@ -26,9 +25,14 @@ class MatchCard {
 }
 
 class MatchCardGameScreen extends StatefulWidget {
-  final int lessonId; // Thêm ID bài học để gọi API
+  final int lessonId;
+  final int userId;
 
-  const MatchCardGameScreen({super.key, required this.lessonId});
+  const MatchCardGameScreen({
+    super.key,
+    required this.lessonId,
+    required this.userId,
+  });
 
   @override
   State<MatchCardGameScreen> createState() => _MatchCardGameScreenState();
@@ -59,7 +63,6 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
     _fetchMatchCards();
   }
 
-  // GỌI API LẤY DỮ LIỆU
   Future<void> _fetchMatchCards() async {
     setState(() {
       _isLoading = true;
@@ -72,7 +75,7 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
         setState(() {
           _apiData = result;
           _isLoading = false;
-          _setupCards(); // Biến đổi data API thành thẻ
+          _setupCards();
         });
       }
     } catch (e) {
@@ -87,11 +90,10 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
 
   @override
   void dispose() {
-    _timer?.cancel(); // Hủy timer khi thoát màn hình
+    _timer?.cancel();
     super.dispose();
   }
 
-  // --- HÀM BẮT ĐẦU ĐẾM THỜI GIAN ---
   void _startTimer() {
     _timer?.cancel();
     _secondsElapsed = 0;
@@ -115,16 +117,11 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
       ));
     }
 
-    // Tổng số cặp thẻ bằng 1 nửa số lượng thẻ API trả về
     _totalPairs = _cards.length ~/ 2;
-
     _cards.shuffle();
-
-    // Bắt đầu đếm ngược ngay khi setup xong thẻ
     _startTimer();
   }
 
-  // LOGIC XỬ LÝ CHẠM
   void _onCardTap(int index) {
     if (_isProcessing || _cards[index].isSelected || _cards[index].isMatched || _isFinished) {
       return;
@@ -141,7 +138,6 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
       int firstIndex = _firstSelectedIndex!;
       int secondIndex = index;
 
-      // KIỂM TRA ĐÚNG CẶP
       if (_cards[firstIndex].pairId == _cards[secondIndex].pairId) {
         Future.delayed(const Duration(milliseconds: 300), () {
           setState(() {
@@ -150,7 +146,6 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
             _cards[firstIndex].isSelected = false;
             _cards[secondIndex].isSelected = false;
 
-            // Cộng điểm XP linh động theo API
             _score += _cards[firstIndex].xpReward;
 
             _firstSelectedIndex = null;
@@ -159,7 +154,6 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
           });
         });
       } else {
-        // SAI CẶP -> ĐÓNG THẺ LẠI
         Future.delayed(const Duration(milliseconds: 600), () {
           setState(() {
             _cards[firstIndex].isSelected = false;
@@ -182,12 +176,8 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
     }
   }
 
-  // --- HÀM MỚI: GỌI API LƯU ---
   Future<void> _saveProgressToServer() async {
     setState(() => _isSaving = true);
-
-    // TODO: Lấy User ID thực tế từ app
-    int currentUserId = 1;
 
     List<MatchCardProgressRequest> request = [
       MatchCardProgressRequest(
@@ -196,7 +186,7 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
         timeTaken: _secondsElapsed,
         totalXP: _score,
         lessonId: widget.lessonId,
-        userId: currentUserId,
+        userId: widget.userId,
       )
     ];
 
@@ -207,14 +197,13 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
     }
   }
 
-  // HÀM CHƠI LẠI TỪ ĐẦU
   void _playAgain() {
     setState(() {
       _isFinished = false;
       _score = 0;
       _firstSelectedIndex = null;
       _isProcessing = false;
-      _setupCards(); // Khởi tạo lại thẻ và xáo trộn lại
+      _setupCards();
     });
   }
 
@@ -227,7 +216,6 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
           children: [
             Column(
               children: [
-                // 1. TOP BAR
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
                   child: Row(
@@ -257,16 +245,12 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
                     ],
                   ),
                 ),
-
-                // 2. LƯỚI THẺ / LOADING / LỖI
                 Expanded(
                   child: _buildBodyContent(),
                 ),
                 const SizedBox(height: 16),
               ],
             ),
-
-            // KHUNG THÔNG BÁO HOÀN THÀNH
             if (_isFinished) _buildGlassOverlay(),
           ],
         ),
@@ -308,7 +292,7 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
         physics: const BouncingScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          childAspectRatio: 0.75, // Chỉnh lại tỷ lệ chút cho vừa vặn chữ
+          childAspectRatio: 0.75,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
@@ -319,7 +303,7 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
             onTap: () => _onCardTap(index),
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
-              opacity: card.isMatched ? 0.0 : (card.isSelected ? 0.6 : 1.0), // isMatched thì tàng hình luôn
+              opacity: card.isMatched ? 0.0 : (card.isSelected ? 0.6 : 1.0),
               child: _buildCardUI(card),
             ),
           );
@@ -328,7 +312,6 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
     );
   }
 
-  // Giao diện thẻ cơ bản
   Widget _buildCardUI(MatchCard card) {
     return Container(
       decoration: BoxDecoration(
@@ -346,7 +329,7 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 16, // Phóng to chữ lên chút
+            fontSize: 16,
             fontWeight: FontWeight.bold,
             height: 1.4,
           ),
@@ -355,80 +338,84 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
     );
   }
 
-  // KHUNG THÔNG BÁO HOÀN THÀNH TRONG SUỐT
   Widget _buildGlassOverlay() {
     return Positioned.fill(
-      // ... BackdropFilter và animation giữ nguyên
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.85,
-        padding: const EdgeInsets.all(32.0),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+      child: Center(
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.emoji_events, size: 80, color: Colors.amber),
-            const SizedBox(height: 16),
-            const Text('Hoàn thành!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 8),
-            // Hiển thị thêm thời gian đã chơi
-            Text('Thời gian: ${_secondsElapsed}s', style: const TextStyle(fontSize: 16, color: Colors.white70)),
-            const SizedBox(height: 24),
-
-            if (_isSaving)
-              const CircularProgressIndicator(color: Colors.amber)
-            else ...[
-              // ... Giữ nguyên khối điểm số và các nút bấm của bạn ...
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: Colors.amber, width: 2),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 24),
-                    const SizedBox(width: 8),
-                    Text('+$_score XP', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber)),
-                  ],
-                ),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.85,
+              padding: const EdgeInsets.all(32.0),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
               ),
-              const SizedBox(height: 32),
-              Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _playAgain,
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.white.withOpacity(0.6)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  const Icon(Icons.emoji_events, size: 80, color: Colors.amber),
+                  const SizedBox(height: 16),
+                  const Text('Hoàn thành!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const SizedBox(height: 8),
+                  Text('Thời gian: ${_secondsElapsed}s', style: const TextStyle(fontSize: 16, color: Colors.white70)),
+                  const SizedBox(height: 24),
+
+                  if (_isSaving)
+                    const CircularProgressIndicator(color: Colors.amber)
+                  else ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: Colors.amber, width: 2),
                       ),
-                      child: const Text('Chơi lại', style: TextStyle(color: Colors.white, fontSize: 16)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.greenAccent.shade400,
-                        foregroundColor: Colors.black87,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 24),
+                          const SizedBox(width: 8),
+                          Text('+$_score XP', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber)),
+                        ],
                       ),
-                      child: const Text('Tiếp tục', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
-                  ),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _playAgain,
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.white.withOpacity(0.6)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Chơi lại', style: TextStyle(color: Colors.white, fontSize: 16)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.greenAccent.shade400,
+                              foregroundColor: Colors.black87,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Tiếp tục', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    )
+                  ]
                 ],
-              )
-            ]
-          ],
+              ),
+            ),
+          ),
         ),
       ),
     );

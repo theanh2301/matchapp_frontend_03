@@ -6,9 +6,14 @@ import '../../../../data/models/quiz_progress_model.dart';
 import '../../../../data/services/quiz_service.dart';
 
 class QuizGameScreen extends StatefulWidget {
-  final int lessonId; // Bắt buộc truyền ID bài học
+  final int lessonId;
+  final int userId;
 
-  const QuizGameScreen({super.key, required this.lessonId});
+  const QuizGameScreen({
+    super.key,
+    required this.lessonId,
+    required this.userId,
+  });
 
   @override
   State<QuizGameScreen> createState() => _QuizGameScreenState();
@@ -24,7 +29,7 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
   int _currentIndex = 0;
   int? _selectedOptionIndex;
   int _correctAnswers = 0;
-  int _totalXpEarned = 0; // Thay vì điểm cứng, ta lấy từ DB
+  int _totalXpEarned = 0;
   bool _isFinished = false;
 
   bool _isSaving = false;
@@ -60,7 +65,6 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
     }
   }
 
-  // XỬ LÝ KHI CHỌN ĐÁP ÁN
   void _onOptionSelected(int index) {
     if (_selectedOptionIndex != null || _isFinished) return;
 
@@ -68,53 +72,44 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
       _selectedOptionIndex = index;
       if (index == _quizzes[_currentIndex].correctOptionIndex) {
         _correctAnswers++;
-        _totalXpEarned += _quizzes[_currentIndex].xpReward; // Cộng XP của câu đó
+        _totalXpEarned += _quizzes[_currentIndex].xpReward;
       }
     });
   }
 
-  // XỬ LÝ KHI BẤM NÚT "TIẾP TỤC"
   void _onNextPressed() {
-    // 1. Lưu đáp án vừa chọn vào hàng đợi
-    // TODO: Thay bằng userId thực tế
-    int currentUserId = 1;
-
     _submitQueue.add(QuizProgressRequest(
-      userId: currentUserId,
-      questionId: _quizzes[_currentIndex].id, // Giả sử Model có thuộc tính id
-      answerId: _quizzes[_currentIndex].answers[_selectedOptionIndex!].id, // Lấy id của đáp án được chọn
-      answeredAt: DateTime.now().toIso8601String()
+        userId: widget.userId,
+        questionId: _quizzes[_currentIndex].id,
+        answerId: _quizzes[_currentIndex].answers[_selectedOptionIndex!].id,
+        answeredAt: DateTime.now().toIso8601String()
     ));
 
-    // 2. Kiểm tra nếu chưa hết câu hỏi thì qua câu mới
     if (_currentIndex < _quizzes.length - 1) {
       setState(() {
         _currentIndex++;
         _selectedOptionIndex = null;
       });
     } else {
-      // Đã xong câu cuối -> Gọi hàm lưu API
       _saveAllProgress();
     }
   }
 
-  // --- HÀM LƯU LÊN SERVER ---
   Future<void> _saveAllProgress() async {
     setState(() {
-      _isFinished = true; // Kích hoạt hiện bảng thông báo
-      _isSaving = true;   // Kích hoạt vòng xoay loading
+      _isFinished = true;
+      _isSaving = true;
     });
 
     await _quizService.saveQuizProgress(_submitQueue);
 
     if (mounted) {
       setState(() {
-        _isSaving = false; // Tắt vòng xoay loading
+        _isSaving = false;
       });
     }
   }
 
-  // HÀM CHƠI LẠI TỪ ĐẦU
   void _playAgain() {
     setState(() {
       _isFinished = false;
@@ -122,7 +117,7 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
       _correctAnswers = 0;
       _totalXpEarned = 0;
       _selectedOptionIndex = null;
-      _submitQueue.clear(); // Xóa lịch sử cũ để chơi lại
+      _submitQueue.clear();
     });
   }
 
@@ -190,7 +185,6 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // TOP BAR
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
               child: Column(
@@ -223,8 +217,6 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
                 ],
               ),
             ),
-
-            // NỘI DUNG CÂU HỎI
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -240,19 +232,16 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
                         border: Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
                       child: Text(
-                        question.typeQuestion, // Lấy từ DB (QUIZ, DAILY, v.v)
+                        question.typeQuestion,
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                       ),
                     ),
                     const SizedBox(height: 24),
-
                     Text(
                       question.content,
                       style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white, height: 1.4),
                     ),
                     const SizedBox(height: 32),
-
-                    // DANH SÁCH ĐÁP ÁN
                     ...List.generate(question.options.length, (index) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16.0),
@@ -264,8 +253,6 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
                         ),
                       );
                     }),
-
-                    // HỘP GIẢI THÍCH (Hiển thị description của đáp án người dùng vừa chọn)
                     if (isAnswered)
                       AnimatedOpacity(
                         opacity: 1.0,
@@ -306,7 +293,7 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                question.answers[_selectedOptionIndex!].description, // Trích xuất description từ API
+                                question.answers[_selectedOptionIndex!].description,
                                 style: const TextStyle(fontSize: 15, color: Colors.white70, height: 1.6),
                               ),
                             ],
@@ -317,8 +304,6 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
                 ),
               ),
             ),
-
-            // NÚT TIẾP TỤC
             Container(
               padding: const EdgeInsets.all(24.0),
               child: SizedBox(
@@ -338,7 +323,6 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
             ),
           ],
         ),
-
         if (_isFinished) _buildGlassOverlay(),
       ],
     );
@@ -377,8 +361,6 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
                     const SizedBox(height: 12),
                     Text('Bạn đã trả lời đúng $_correctAnswers/${_quizzes.length} câu', style: const TextStyle(fontSize: 18, color: Colors.white70)),
                     const SizedBox(height: 30),
-
-                    // NẾU ĐANG LƯU THÌ HIỆN VÒNG XOAY, NẾU KHÔNG THÌ HIỆN ĐIỂM VÀ NÚT
                     if (_isSaving)
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 20.0),

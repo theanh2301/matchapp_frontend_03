@@ -117,8 +117,6 @@ class _QuizScreenState extends State<QuizScreen> {
       _timer?.cancel(); // Dừng đồng hồ
     });
 
-    // TODO: Lấy userId thực tế đang đăng nhập trong app của bạn
-    int currentUserId = widget.userId;
     List<PracticeProgressRequest> requests = [];
 
     // Duyệt qua các câu hỏi đã chọn đáp án để tạo list request
@@ -127,7 +125,7 @@ class _QuizScreenState extends State<QuizScreen> {
       final selectedAnswer = question.answers[optionIndex];
 
       requests.add(PracticeProgressRequest(
-        userId: currentUserId,
+        userId: widget.userId,
         questionId: question.id, // Giả sử PracticeQuestionModel có thuộc tính id
         answerId: selectedAnswer.id, // Giả sử PracticeAnswerModel có thuộc tính id
       ));

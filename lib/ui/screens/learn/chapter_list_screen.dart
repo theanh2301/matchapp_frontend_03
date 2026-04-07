@@ -15,6 +15,9 @@ class ChapterListScreen extends StatefulWidget {
   final IconData subjectIcon;
   final int totalLessons;
 
+  final int userId;
+  final int gradeId;
+
   const ChapterListScreen({
     super.key,
     required this.subjectId,
@@ -25,7 +28,9 @@ class ChapterListScreen extends StatefulWidget {
     required this.earnedXP,
     required this.themeColor,
     required this.subjectIcon,
-    required this.totalLessons
+    required this.totalLessons,
+    required this.userId,
+    required this.gradeId
   });
 
   @override
@@ -37,9 +42,6 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
   bool _isLoading = true;
   bool _hasError = false;
   List<ChapterModel> _chapters = [];
-
-  // TODO: Thay userId = 2 bằng ID thật của user đang đăng nhập
-  final int _currentUserId = 1;
 
   @override
   void initState() {
@@ -54,8 +56,8 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
     });
 
     try {
-      debugPrint("🚀 Đang gọi API Chapters với userId=$_currentUserId và subjectId=${widget.subjectId}");
-      final result = await _learnService.getChaptersOverview(_currentUserId, widget.subjectId);
+      debugPrint("🚀 Đang gọi API Chapters với userId=${widget.userId} và subjectId=${widget.subjectId}");
+      final result = await _learnService.getChaptersOverview(widget.userId, widget.subjectId);
 
       if (mounted) {
         setState(() {
@@ -281,6 +283,8 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
               chapterSubtitle: subtitle,
               progressText: "$completedLessons/$totalLessons bài hoàn thành",
               themeColor: themeColor,
+              userId: widget.userId,
+              gradeId: widget.gradeId
             ),
           ),
         );

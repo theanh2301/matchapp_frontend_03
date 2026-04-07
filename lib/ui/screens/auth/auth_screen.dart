@@ -13,24 +13,19 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  // --- STATE ---
   bool isLogin = true;
   bool _isLoading = false;
 
-  final _formKey = GlobalKey<FormState>(); // Key quản lý Validate Form
+  final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
   final TextEditingController _confirmPassController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
 
-  final AuthService _authService = AuthService();
-
-  // --- LOGIC ---
   void _handleAuth() async {
     FocusScope.of(context).unfocus();
 
-    // Tự động kiểm tra tất cả các trường (TextFormField)
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -38,20 +33,26 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // GIẢ LẬP API (Thay bằng _authService thực tế của bạn)
-      // await Future.delayed(const Duration(seconds: 2));
-
       if (isLogin) {
-        await _authService.login(_emailController.text, _passController.text);
+        await AuthService.login(
+          _emailController.text.trim(),
+          _passController.text.trim(),
+        );
         if (mounted) {
           _showSnackBar("Đăng nhập thành công!", AppColors.green);
-          Navigator.pushReplacement(
+          Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const MainScreen()),
+                (Route<dynamic> route) => false,
           );
         }
       } else {
-        await _authService.register(_nameController.text, _emailController.text, _passController.text, _confirmPassController.text);
+        await AuthService.register(
+          _nameController.text.trim(),
+          _emailController.text.trim(),
+          _passController.text.trim(),
+          _confirmPassController.text.trim(),
+        );
         if (mounted) {
           _showSnackBar("Đăng ký thành công! Mời bạn đăng nhập.", AppColors.green);
           setState(() {
@@ -108,7 +109,6 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  // --- UI ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -130,8 +130,6 @@ class _AuthScreenState extends State<AuthScreen> {
               children: [
                 const RobotMascot(size: 100, isWhiteStyle: false),
                 const SizedBox(height: 32),
-
-                // Form Container
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -142,19 +140,17 @@ class _AuthScreenState extends State<AuthScreen> {
                     ],
                   ),
                   child: Form(
-                    key: _formKey, // Bắt buộc để Validate
+                    key: _formKey,
                     child: Column(
                       children: [
-                        // Toggle Login/Register
                         AuthToggleSwitch(
                           isLogin: isLogin,
                           onToggle: (value) => setState(() {
                             isLogin = value;
-                            _formKey.currentState?.reset(); // Xóa lỗi cũ khi chuyển tab
+                            _formKey.currentState?.reset();
                           }),
                         ),
                         const SizedBox(height: 30),
-
                         AnimatedSize(
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeOutCubic,
@@ -170,7 +166,6 @@ class _AuthScreenState extends State<AuthScreen> {
                                 ),
                                 const SizedBox(height: 16),
                               ],
-
                               CustomTextField(
                                 controller: _emailController,
                                 icon: Icons.email_outlined,
@@ -183,7 +178,6 @@ class _AuthScreenState extends State<AuthScreen> {
                                 },
                               ),
                               const SizedBox(height: 16),
-
                               CustomTextField(
                                 controller: _passController,
                                 icon: Icons.lock_outline,
@@ -191,7 +185,6 @@ class _AuthScreenState extends State<AuthScreen> {
                                 isPassword: true,
                                 validator: (val) => val!.length < 6 ? "Mật khẩu tối thiểu 6 ký tự" : null,
                               ),
-
                               if (!isLogin) ...[
                                 const SizedBox(height: 16),
                                 CustomTextField(
@@ -209,32 +202,28 @@ class _AuthScreenState extends State<AuthScreen> {
                             ],
                           ),
                         ),
-
                         if (isLogin) ...[
                           const SizedBox(height: 8),
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {}, // Xử lý quên mật khẩu
+                              onPressed: () {},
                               child: const Text("Quên mật khẩu?", style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w600)),
                             ),
                           ),
                         ] else
                           const SizedBox(height: 24),
-
                         PrimaryGradientButton(
                           text: isLogin ? "Đăng nhập" : "Đăng ký",
                           isLoading: _isLoading,
                           onPressed: _handleAuth,
                         ),
-
                         const SizedBox(height: 30),
                         const SocialLoginSection(),
                       ],
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 30),
                 const TermsAndPolicyText(),
               ],
@@ -245,10 +234,6 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
-
-// ============================================================================
-// CÁC WIDGET ĐỘC LẬP (Nên tách ra thư mục features/auth/widgets/ sau này)
-// ============================================================================
 
 class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -281,7 +266,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       controller: widget.controller,
       obscureText: widget.isPassword ? _obscureText : false,
       keyboardType: widget.keyboardType,
-      validator: widget.validator, // Hàm kiểm tra lỗi
+      validator: widget.validator,
       style: const TextStyle(fontSize: 15),
       decoration: InputDecoration(
         prefixIcon: Icon(widget.icon, color: Colors.grey.shade400, size: 22),

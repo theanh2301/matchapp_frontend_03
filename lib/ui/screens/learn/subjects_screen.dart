@@ -1,7 +1,4 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/subject_model.dart';
 import '../../../data/models/suggest_lesson_model.dart';
@@ -13,26 +10,25 @@ import 'game/match_card.dart';
 import 'game/quiz_card.dart';
 
 class LearnScreen extends StatefulWidget {
-  const LearnScreen({super.key});
+  final int userId;
+  final int gradeId;
+
+  const LearnScreen({
+    super.key,
+    required this.userId,
+    required this.gradeId,
+  });
 
   @override
   State<LearnScreen> createState() => _LearnScreenState();
 }
 
 class _LearnScreenState extends State<LearnScreen> {
-  // TODO: Thay userId = 1 bằng ID thật của user đang đăng nhập
-  final int _currentUserId = 1;
-
-  // TODO: Cập nhật biến này từ API lấy thông tin User Profile để biết user đang ở lớp mấy
-  String _currentGrade = "Lớp 10";
-
-  // --- SERVICE & TRẠNG THÁI MÔN HỌC ---
   final SubjectService _learnService = SubjectService();
   bool _isLoading = true;
   bool _hasError = false;
   List<SubjectModel> _subjects = [];
 
-  // --- SERVICE & TRẠNG THÁI GỢI Ý HỌC TẬP ---
   final SuggestedLessonService _suggestedService = SuggestedLessonService();
   bool _isLoadingSuggested = true;
   bool _hasErrorSuggested = false;
@@ -44,7 +40,6 @@ class _LearnScreenState extends State<LearnScreen> {
     _fetchAllData();
   }
 
-  // Hàm gọi đồng thời hoặc lần lượt các API cần thiết
   Future<void> _fetchAllData() async {
     await _fetchSubjects();
     await _fetchSuggestedLessons();
@@ -57,7 +52,7 @@ class _LearnScreenState extends State<LearnScreen> {
     });
 
     try {
-      final result = await _learnService.getSubjectsProgress(_currentUserId);
+      final result = await _learnService.getSubjectsProgress(widget.userId);
 
       if (mounted) {
         setState(() {
@@ -72,7 +67,6 @@ class _LearnScreenState extends State<LearnScreen> {
           _isLoading = false;
         });
       }
-      debugPrint("API Error (Subjects): $e");
     }
   }
 
@@ -83,7 +77,7 @@ class _LearnScreenState extends State<LearnScreen> {
     });
 
     try {
-      final result = await _suggestedService.getSuggestedLessons(_currentUserId);
+      final result = await _suggestedService.getSuggestedLessons(widget.userId);
 
       if (mounted) {
         setState(() {
@@ -98,7 +92,6 @@ class _LearnScreenState extends State<LearnScreen> {
           _isLoadingSuggested = false;
         });
       }
-      debugPrint("API Error (Suggested Lessons): $e");
     }
   }
 
@@ -110,9 +103,6 @@ class _LearnScreenState extends State<LearnScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ==========================================
-            // 1. HEADER HIỂN THỊ THÔNG TIN HỌC TẬP & LỚP
-            // ==========================================
             Container(
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -127,7 +117,6 @@ class _LearnScreenState extends State<LearnScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Cột Text bên trái
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -142,8 +131,6 @@ class _LearnScreenState extends State<LearnScreen> {
                       ),
                     ],
                   ),
-
-                  // Badge hiển thị Lớp bên phải
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
@@ -156,7 +143,7 @@ class _LearnScreenState extends State<LearnScreen> {
                         const Icon(Icons.school, color: AppColors.white, size: 18),
                         const SizedBox(width: 8),
                         Text(
-                          _currentGrade,
+                          "Lớp ${widget.gradeId}",
                           style: const TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ],
@@ -165,10 +152,6 @@ class _LearnScreenState extends State<LearnScreen> {
                 ],
               ),
             ),
-
-            // ==========================================
-            // 2. DANH SÁCH CHỦ ĐỀ & GỢI Ý
-            // ==========================================
             Padding(
               padding: const EdgeInsets.all(20),
               child: _buildBodyContent(),
@@ -185,22 +168,16 @@ class _LearnScreenState extends State<LearnScreen> {
       children: [
         const Text("Môn học", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
-
         _buildSubjectsSection(),
-
         const SizedBox(height: 30),
-
         const Text("Lộ trình học tập (Gợi ý)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
-
         _buildSuggestedLessonsSection(),
-
         const SizedBox(height: 40),
       ],
     );
   }
 
-  // Khối logic kết xuất danh sách môn học
   Widget _buildSubjectsSection() {
     if (_isLoading) {
       return const Center(
@@ -278,7 +255,6 @@ class _LearnScreenState extends State<LearnScreen> {
     );
   }
 
-  // Khối logic kết xuất danh sách gợi ý
   Widget _buildSuggestedLessonsSection() {
     if (_isLoadingSuggested) {
       return const Center(
@@ -341,14 +317,7 @@ class _LearnScreenState extends State<LearnScreen> {
     return Column(children: items);
   }
 
-  // (GIỮ NGUYÊN CÁC HÀM BÊN DƯỚI: _showGameOptions, _buildBottomSheetButton, _buildTopicCard, _buildTimelineItem)
-  // ...
-
-
   void _showGameOptions(BuildContext context, SuggestedLessonModel lesson) {
-    // TODO: Khi API Backend cập nhật thêm các trường chi tiết cho bài gợi ý,
-    // bạn hãy thay các biến false này bằng dữ liệu thật từ model nhé.
-    // Ví dụ: bool isFlashcardDone = lesson.isFlashcardDone;
     bool isFlashcardDone = false;
     bool isQuizDone = false;
     bool isMatchDone = false;
@@ -362,7 +331,7 @@ class _LearnScreenState extends State<LearnScreen> {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // Tự động thu gọn theo nội dung
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 "Học: ${lesson.lessonName}",
@@ -371,21 +340,18 @@ class _LearnScreenState extends State<LearnScreen> {
               const SizedBox(height: 8),
               const Text("Chọn phần bạn muốn học ngay", style: TextStyle(color: Colors.black54)),
               const SizedBox(height: 24),
-
-              // Nút 1: Flashcard
               _buildBottomSheetButton(
                 title: "Flashcards",
                 icon: Icons.style,
                 color: const Color(0xFF6C47FF),
-                isCompleted: isFlashcardDone, // Truyền trạng thái vào đây
+                isCompleted: isFlashcardDone,
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => FlashcardGameScreen(lessonId: lesson.lessonId)));
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => FlashcardGameScreen(lessonId: lesson.lessonId, userId: widget.userId)));
                 },
               ),
               const SizedBox(height: 12),
-
-              // Nút 2: Học tương tác (Quiz)
               _buildBottomSheetButton(
                 title: "Học tương tác",
                 icon: Icons.auto_awesome,
@@ -393,12 +359,11 @@ class _LearnScreenState extends State<LearnScreen> {
                 isCompleted: isQuizDone,
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => QuizGameScreen(lessonId: lesson.lessonId)));
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => QuizGameScreen(lessonId: lesson.lessonId, userId: widget.userId)));
                 },
               ),
               const SizedBox(height: 12),
-
-              // Nút 3: Ghép thẻ
               _buildBottomSheetButton(
                 title: "Ghép thẻ",
                 icon: Icons.ads_click,
@@ -406,7 +371,8 @@ class _LearnScreenState extends State<LearnScreen> {
                 isCompleted: isMatchDone,
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => MatchCardGameScreen(lessonId: lesson.lessonId)));
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => MatchCardGameScreen(lessonId: lesson.lessonId, userId: widget.userId)));
                 },
               ),
             ],
@@ -416,16 +382,13 @@ class _LearnScreenState extends State<LearnScreen> {
     );
   }
 
-  // Widget con hỗ trợ tạo nút bấm trong BottomSheet đã được nâng cấp
   Widget _buildBottomSheetButton({
     required String title,
     required IconData icon,
     required Color color,
-    required bool isCompleted, // Thêm tham số kiểm tra hoàn thành
+    required bool isCompleted,
     required VoidCallback onPressed,
   }) {
-    // Nếu hoàn thành: Nền xanh nhạt, chữ và icon xanh lục.
-    // Nếu chưa: Nền trắng, viền và chữ tím.
     final Color bgColor = isCompleted ? const Color(0xFFE6F9F0) : Colors.white;
     final Color contentColor = isCompleted ? const Color(0xFF00A86B) : color;
     final IconData trailingIcon = isCompleted ? Icons.check_circle : Icons.chevron_right;
@@ -435,7 +398,6 @@ class _LearnScreenState extends State<LearnScreen> {
         backgroundColor: bgColor,
         foregroundColor: contentColor,
         elevation: 0,
-        // Nếu đã hoàn thành thì bỏ viền, chưa hoàn thành thì hiện viền mờ
         side: BorderSide(
             color: isCompleted ? Colors.transparent : color.withOpacity(0.3),
             width: 1.5
@@ -449,7 +411,7 @@ class _LearnScreenState extends State<LearnScreen> {
           Icon(icon, size: 24),
           const SizedBox(width: 16),
           Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
-          Icon(trailingIcon), // Mũi tên hoặc Dấu tích
+          Icon(trailingIcon),
         ],
       ),
     );
@@ -480,6 +442,8 @@ class _LearnScreenState extends State<LearnScreen> {
               subjectIcon: icon,
               earnedXP: earnedXp,
               totalLessons: totalLesson,
+              userId: widget.userId,
+              gradeId: widget.gradeId
             ),
           ),
         );
@@ -549,7 +513,7 @@ class _LearnScreenState extends State<LearnScreen> {
     String? number,
     bool isFirst = false,
     bool isLast = false,
-    VoidCallback? onTap, // Thêm tham số onTap
+    VoidCallback? onTap,
   }) {
     Color borderColor;
     Color bgColor;
@@ -601,15 +565,13 @@ class _LearnScreenState extends State<LearnScreen> {
             ),
           ),
           const SizedBox(width: 12),
-
-          // Thẻ nội dung có thể bấm được
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: onTap, // Gọi hàm sự kiện khi bấm
+                  onTap: onTap,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -620,7 +582,7 @@ class _LearnScreenState extends State<LearnScreen> {
                       boxShadow: status == TimelineStatus.current ? [BoxShadow(color: AppColors.primary.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))] : [],
                     ),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center, // Căn giữa theo chiều dọc
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
                           child: Column(
@@ -632,7 +594,6 @@ class _LearnScreenState extends State<LearnScreen> {
                             ],
                           ),
                         ),
-                        // Nút "Đang học" HOẶC Icon Play
                         if (status == TimelineStatus.current)
                           Container(
                             margin: const EdgeInsets.only(right: 8),
@@ -640,8 +601,6 @@ class _LearnScreenState extends State<LearnScreen> {
                             decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12)),
                             child: const Text("Đang học", style: TextStyle(color: AppColors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                           ),
-
-                        // Thêm Icon điều hướng cho các mục chưa hoàn thành
                         if (status != TimelineStatus.completed)
                           Icon(Icons.play_circle_fill, color: AppColors.primary.withOpacity(0.8), size: 28),
                       ],

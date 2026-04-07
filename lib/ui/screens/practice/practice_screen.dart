@@ -8,7 +8,14 @@ import '../../../data/models/practice_list_model.dart';
 import '../../../data/services/practice_service.dart';
 
 class PracticeScreen extends StatefulWidget {
-  const PracticeScreen({super.key});
+  final int userId;
+  final int gradeId;
+
+  const PracticeScreen({
+    super.key,
+    required this.userId,
+    required this.gradeId,
+  });
 
   @override
   State<PracticeScreen> createState() => _PracticeScreenState();
@@ -18,11 +25,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   final PracticeService _practiceService = PracticeService();
 
   late Future<AllPracticeStatsModel> _allStatsFuture;
-
-  // Future chứa danh sách các đề yếu (gọi API weak)
   late Future<List<PracticeListModel>> _weakTestsFuture;
-
-  final int currentUserId = 1;
 
   @override
   void initState() {
@@ -31,8 +34,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   void _loadData() {
-    _allStatsFuture = _practiceService.getAllPracticeStats(currentUserId);
-    _weakTestsFuture = _practiceService.getWeakPractices(currentUserId);
+    _allStatsFuture = _practiceService.getAllPracticeStats(widget.userId);
+    _weakTestsFuture = _practiceService.getWeakPractices(widget.userId);
   }
 
   void _refreshData() {
@@ -49,9 +52,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ==========================================
-            // 1. HEADER
-            // ==========================================
             Container(
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -86,10 +86,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ],
               ),
             ),
-
-            // ==========================================
-            // 2. CÁC THẺ BÀI TẬP
-            // ==========================================
             Transform.translate(
               offset: const Offset(0, -20),
               child: Padding(
@@ -98,7 +94,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     FutureBuilder<AllPracticeStatsModel>(
-                      // Thay bằng Model thật
                       future: _allStatsFuture,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
@@ -124,7 +119,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               context: context,
                               practiceType: 'DAILY',
                               statsData: allData.dailyStats,
-                              // Truyền trực tiếp data
                               icon: Icons.calendar_today,
                               iconBgColor: AppColors.orange,
                               title: "Luyện theo ngày",
@@ -136,7 +130,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               context: context,
                               practiceType: 'TOPIC',
                               statsData: allData.topicStats,
-                              // Truyền trực tiếp data
                               icon: Icons.adjust,
                               iconBgColor: AppColors.primary,
                               title: "Luyện theo chủ đề",
@@ -148,7 +141,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                               context: context,
                               practiceType: 'CHALLENGE',
                               statsData: allData.challengeStats,
-                              // Truyền trực tiếp data
                               icon: Icons.emoji_events,
                               iconBgColor: AppColors.purple,
                               title: "Thử thách",
@@ -159,12 +151,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         );
                       },
                     ),
-
                     const SizedBox(height: 32),
-
-                    // ==========================================
-                    // 3. ĐỀ CẦN CẢI THIỆN (TỪ API)
-                    // ==========================================
                     Row(
                       children: [
                         Icon(
@@ -183,7 +170,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-
                     FutureBuilder<List<PracticeListModel>>(
                       future: _weakTestsFuture,
                       builder: (context, snapshot) {
@@ -204,7 +190,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           );
                         } else if (!snapshot.hasData ||
                             snapshot.data!.isEmpty) {
-                          // Hiển thị giao diện khi không có đề yếu nào
                           return Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(20),
@@ -234,29 +219,23 @@ class _PracticeScreenState extends State<PracticeScreen> {
                           );
                         }
 
-                        // Hiển thị danh sách WeakPracticeCard nếu có dữ liệu
                         return Column(
                           children: snapshot.data!
                               .map(
                                 (practice) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 16.0),
-                                  child: WeakPracticeCard(
-                                    practice: practice,
-                                    userId: currentUserId,
-                                    onRefresh: _refreshData,
-                                  ),
-                                ),
-                              )
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: WeakPracticeCard(
+                                practice: practice,
+                                userId: widget.userId,
+                                onRefresh: _refreshData,
+                              ),
+                            ),
+                          )
                               .toList(),
                         );
                       },
                     ),
-
                     const SizedBox(height: 16),
-
-                    // ==========================================
-                    // 4. AI GỢI Ý LUYỆN TẬP
-                    // ==========================================
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -328,7 +307,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -343,15 +321,13 @@ class _PracticeScreenState extends State<PracticeScreen> {
   Widget _buildChallengeCard({
     required BuildContext context,
     required String practiceType,
-    required PracticeModel
-    statsData, // ĐỔI: Nhận thẳng cục data, không nhận Future nữa
+    required PracticeModel statsData,
     required IconData icon,
     required Color iconBgColor,
     required String title,
     required String subtitle,
     required Color themeColor,
   }) {
-    // Không cần FutureBuilder nữa, dùng thẳng dữ liệu truyền vào
     String displayProgressText = "${statsData.progressText} đề hoàn thành";
     double displayProgressValue = statsData.progressPercent;
 
@@ -381,7 +357,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   themeColor: themeColor,
                   headerIcon: icon,
                   practiceType: practiceType,
-                  userId: currentUserId,
+                  userId: widget.userId,
                 ),
               ),
             ).then((_) {
@@ -474,9 +450,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 }
 
-// =====================================================================
-// WIDGET THẺ ĐỀ CẦN CẢI THIỆN ĐÃ ĐƯỢC CẬP NHẬT
-// =====================================================================
 class WeakPracticeCard extends StatefulWidget {
   final PracticeListModel practice;
   final int userId;
@@ -498,8 +471,6 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
   bool _isExpanded = false;
 
   Future<List<dynamic>>? _wrongQuestionsFuture;
-
-  // Thêm ScrollController để quản lý thanh cuộn
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -555,7 +526,6 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                 right: 16,
                 bottom: 20,
               ),
-
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -611,7 +581,6 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                   ),
                 ],
               ),
-
               children: [
                 if (_isExpanded && _wrongQuestionsFuture != null)
                   FutureBuilder<List<dynamic>>(
@@ -631,7 +600,6 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // 1. NÚT "LÀM LẠI CÁC CÂU SAI" CHUYỂN LÊN TRÊN VÀ THIẾT KẾ LẠI
                           ElevatedButton.icon(
                             onPressed: () {
                               Navigator.push(
@@ -659,7 +627,6 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF6C47FF),
-                              // Màu tím
                               foregroundColor: Colors.white,
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -668,14 +635,10 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 16),
                           const Divider(height: 1),
                           const SizedBox(height: 8),
-
-                          // 2. KHU VỰC CUỘN DANH SÁCH CÂU SAI
                           ConstrainedBox(
-                            // Giới hạn chiều cao tối đa (khoảng 300px), nếu dài hơn sẽ tự cuộn
                             constraints: const BoxConstraints(maxHeight: 320),
                             child: RawScrollbar(
                               controller: _scrollController,
@@ -685,9 +648,7 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                               child: SingleChildScrollView(
                                 controller: _scrollController,
                                 physics: const ClampingScrollPhysics(),
-                                // Giúp cuộn mượt hơn trong ExpansionTile
                                 child: Padding(
-                                  // Padding bên phải một chút để tránh dính thanh cuộn
                                   padding: const EdgeInsets.only(
                                     right: 8.0,
                                     bottom: 8.0,
@@ -698,7 +659,7 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                                         question: mistake.questionContent,
                                         userAnswer: mistake.userAnswerContent,
                                         correctAnswer:
-                                            mistake.correctAnswerContent,
+                                        mistake.correctAnswerContent,
                                       );
                                     }).toList(),
                                   ),

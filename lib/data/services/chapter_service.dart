@@ -2,32 +2,27 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
-import '../../core/constants/ApiConstants.dart';
-import '../models/chapter_model.dart'; // Để dùng debugPrint
+import '../../core/constants/api_constants.dart';
+import '../models/chapter_model.dart';
 
 class ChapterService {
   final String baseUrl = "${ApiConstants.baseUrl}/chapters";
 
-  // Hàm lấy danh sách chương của 1 môn học
   Future<List<ChapterModel>> getChaptersOverview(int userId, int subjectId) async {
     try {
       final Uri url = Uri.parse('$baseUrl/$subjectId/chapters?userId=$userId');
 
       final response = await http.get(
         url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        headers: ApiConstants.getAuthHeaders(),
       ).timeout(const Duration(seconds: 10));
 
-      // 1. KIỂM TRA MÃ TRẠNG THÁI TRƯỚC (200 là thành công)
       if (response.statusCode == 200 || response.statusCode == 201) {
-
-        // 2. NẾU SERVER TRẢ VỀ RỖNG HOÀN TOÀN -> BÁO CHƯA CÓ CHƯƠNG NÀO
         if (response.body.isEmpty) {
           debugPrint("⚠️ Server trả về body rỗng (chưa có chương nào).");
-          return []; // Trả về danh sách rỗng để UI hiện "Chưa có chương nào"
+          return [];
         }
 
-        // Nếu có dữ liệu thì mới tiến hành dịch JSON
         final dynamic decodedData = jsonDecode(utf8.decode(response.bodyBytes));
         debugPrint("🚀 Call chapter successfully");
 
@@ -45,7 +40,6 @@ class ChapterService {
           throw Exception("Định dạng dữ liệu lạ.");
         }
       } else {
-        // Nếu bị lỗi 404, 500... thì in ra luôn để dễ fix backend
         throw Exception("Lỗi server ${response.statusCode}: ${response.body}");
       }
     } catch (e) {
