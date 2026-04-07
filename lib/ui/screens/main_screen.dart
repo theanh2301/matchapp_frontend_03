@@ -4,10 +4,21 @@ import 'package:learn_math_app_03/ui/screens/profile/profile_screen.dart';
 import 'package:learn_math_app_03/ui/screens/progress/progress_screen.dart';
 import '../../core/theme/app_colors.dart';
 import 'home/home_screen.dart';
-import 'learn/subjects_screen.dart'; // Import file HomeScreen mới tách
+import 'learn/subjects_screen.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  // 1. Thêm các biến này vào MainScreen.
+  // Cài đặt giá trị mặc định (tạm thời) để bạn có thể test ngay mà không bị lỗi.
+  final int userId;
+  final String userName;
+  final String className;
+
+  const MainScreen({
+    super.key,
+    this.userId = 1,                  // Dữ liệu tạm
+    this.userName = 'Thế Anh',        // Dữ liệu tạm
+    this.className = 'Lớp 10',        // Dữ liệu tạm
+  });
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -16,14 +27,37 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  // Danh sách các màn hình tương ứng với từng Tab
-  final List<Widget> _screens = [
-    const HomeScreen(),      // Tab 0: Trang chủ (Đã được tách ra file riêng)
-    const LearnScreen(),
-    const PracticeScreen(),
-    const ProgressScreen(),
-    const ProfileScreen()// Tab 4: Cá nhân
-  ];
+  // 2. Khai báo _screens với từ khóa 'late' (sẽ khởi tạo sau)
+  late List<Widget> _screens;
+
+  // Mở file main_screen.dart, tìm đến hàm initState() và sửa lại như sau:
+
+  @override
+  void initState() {
+    super.initState();
+
+    _screens = [
+      HomeScreen(
+        userId: widget.userId,
+        userName: widget.userName,
+        className: widget.className,
+        onNavigateToLearn: () {
+          setState(() {
+            _currentIndex = 1;
+          });
+        },
+        onNavigateToPractice: () {
+          setState(() {
+            _currentIndex = 2;
+          });
+        },
+      ),
+      const LearnScreen(),    // Tab 1
+      const PracticeScreen(), // Tab 2
+      const ProgressScreen(), // Tab 3
+      const ProfileScreen()   // Tab 4
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -2,14 +2,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../core/constants/ApiConstants.dart';
 import '../models/subject_model.dart';
-import 'package:flutter/foundation.dart'; // Để dùng debugPrint
+import 'package:flutter/foundation.dart';
+
+import '../models/subject_progress_model.dart'; // Để dùng debugPrint
 
 class SubjectService {
-  final String baseUrl = "${ApiConstants.baseUrl}/subjects/overview";
+  final String baseUrl = "${ApiConstants.baseUrl}/subjects";
 
   Future<List<SubjectModel>> getSubjectsProgress(int userId) async {
     try {
-      final Uri url = Uri.parse('$baseUrl?userId=$userId');
+      final Uri url = Uri.parse('$baseUrl/overview?userId=$userId');
 
       final response = await http.get(
         url,
@@ -57,6 +59,33 @@ class SubjectService {
     } catch (e) {
       debugPrint("❌ LỖI THẬT SỰ LÀ: $e");
       throw Exception("Lỗi xử lý: $e");
+    }
+  }
+
+  Future<List<SubjectProgressModel>> fetchSubjectProgress(int userId) async {
+    final url = '$baseUrl/progress?userId=$userId';
+
+    // 1. Hiển thị URL của API đang chuẩn bị gọi ra Console
+    print('🌐 ĐANG GỌI API: $url');
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      // (Tùy chọn) In ra mã trạng thái để biết gọi thành công (200) hay lỗi (404, 500...)
+      print('📦 MÃ PHẢN HỒI (Status Code): ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = jsonDecode(response.body);
+        return data.map((json) => SubjectProgressModel.fromJson(json)).toList();
+      } else {
+        // 2. Lỗi do Server trả về (VD: 404 Not Found, 500 Internal Server Error)
+        print('❌ LỖI SERVER: ${response.statusCode} - Nội dung: ${response.body}');
+        throw Exception('Lỗi server: ${response.statusCode}');
+      }
+    } catch (e) {
+      // 3. Lỗi khi không thể kết nối lên server (Mất mạng, sai địa chỉ IP, Server chưa chạy...)
+      print('🚫 LỖI KẾT NỐI: $e');
+      throw Exception('Không thể kết nối đến server. Vui lòng kiểm tra mạng hoặc backend.');
     }
   }
 }
