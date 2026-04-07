@@ -7,9 +7,9 @@ import '../models/suggest_lesson_model.dart';
 
 class SuggestedLessonService {
 
-  Future<List<SuggestedLessonModel>> getSuggestedLessons(int userId, int subjectId) async {
+  Future<List<SuggestedLessonModel>> getSuggestedLessons(int userId) async {
     // 1. Tạo URL với các tham số truyền vào
-    final String urlString = "${ApiConstants.baseUrl}/lessons/suggested-lessons?userId=$userId&subjectId=$subjectId";
+    final String urlString = "${ApiConstants.baseUrl}/lessons/suggested-lessons?userId=$userId";
     final Uri url = Uri.parse(urlString);
 
     // THÊM DÒNG NÀY ĐỂ KIỂM TRA ĐƯỜNG DẪN TRONG DEBUG CONSOLE

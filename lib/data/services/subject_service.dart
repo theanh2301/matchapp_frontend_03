@@ -7,9 +7,9 @@ import 'package:flutter/foundation.dart'; // Để dùng debugPrint
 class SubjectService {
   final String baseUrl = "${ApiConstants.baseUrl}/subjects/overview";
 
-  Future<List<SubjectModel>> getSubjectsProgress(int userId, int gradeId) async {
+  Future<List<SubjectModel>> getSubjectsProgress(int userId) async {
     try {
-      final Uri url = Uri.parse('$baseUrl?subjectClass=$gradeId&userId=$userId');
+      final Uri url = Uri.parse('$baseUrl?userId=$userId');
 
       final response = await http.get(
         url,

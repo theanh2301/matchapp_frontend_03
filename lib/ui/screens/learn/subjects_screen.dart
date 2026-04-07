@@ -20,8 +20,11 @@ class LearnScreen extends StatefulWidget {
 }
 
 class _LearnScreenState extends State<LearnScreen> {
-  final List<String> _grades = ['Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10', 'Lớp 11', 'Lớp 12'];
-  int _selectedGradeIndex = 0; // Mặc định Lớp 10
+  // TODO: Thay userId = 1 bằng ID thật của user đang đăng nhập
+  final int _currentUserId = 1;
+
+  // TODO: Cập nhật biến này từ API lấy thông tin User Profile để biết user đang ở lớp mấy
+  String _currentGrade = "Lớp 10";
 
   // --- SERVICE & TRẠNG THÁI MÔN HỌC ---
   final SubjectService _learnService = SubjectService();
@@ -34,9 +37,6 @@ class _LearnScreenState extends State<LearnScreen> {
   bool _isLoadingSuggested = true;
   bool _hasErrorSuggested = false;
   List<SuggestedLessonModel> _suggestedLessons = [];
-
-  // TODO: Thay userId = 1 bằng ID thật của user đang đăng nhập
-  final int _currentUserId = 3;
 
   @override
   void initState() {
@@ -57,8 +57,7 @@ class _LearnScreenState extends State<LearnScreen> {
     });
 
     try {
-      int subjectClass = _selectedGradeIndex + 6;
-      final result = await _learnService.getSubjectsProgress(_currentUserId, subjectClass);
+      final result = await _learnService.getSubjectsProgress(_currentUserId);
 
       if (mounted) {
         setState(() {
@@ -84,12 +83,7 @@ class _LearnScreenState extends State<LearnScreen> {
     });
 
     try {
-      // TODO: Ở đây mình truyền tạm subjectId = 5 theo API bạn cung cấp.
-      // Nếu bạn muốn lấy id của môn học đầu tiên trong danh sách _subjects,
-      // bạn có thể đổi thành: int targetSubjectId = _subjects.isNotEmpty ? _subjects.first.subjectId : 5;
-      int targetSubjectId = 5;
-
-      final result = await _suggestedService.getSuggestedLessons(_currentUserId, targetSubjectId);
+      final result = await _suggestedService.getSuggestedLessons(_currentUserId);
 
       if (mounted) {
         setState(() {
@@ -117,61 +111,63 @@ class _LearnScreenState extends State<LearnScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ==========================================
-            // 1. HEADER & CHỌN LỚP
+            // 1. HEADER HIỂN THỊ THÔNG TIN HỌC TẬP & LỚP
             // ==========================================
             Container(
               width: double.infinity,
-              color: AppColors.primary,
-              padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text("Học tập", style: TextStyle(color: AppColors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  const Text("Chọn khối lớp để xem tiến độ", style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 20),
-
-                  // Thanh chọn lớp
-                  SizedBox(
-                    height: 36,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _grades.length,
-                      itemBuilder: (context, index) {
-                        final isSelected = _selectedGradeIndex == index;
-                        return GestureDetector(
-                          onTap: () {
-                            if (!isSelected) {
-                              setState(() => _selectedGradeIndex = index);
-                              _fetchAllData(); // Gọi lại khi đổi lớp
-                            }
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 12),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isSelected ? AppColors.white : Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              _grades[index],
-                              style: TextStyle(
-                                color: isSelected ? AppColors.primary : AppColors.white,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                  // Cột Text bên trái
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                          "Học tập",
+                          style: TextStyle(color: AppColors.white, fontSize: 28, fontWeight: FontWeight.bold)
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                          "Tiếp tục hành trình của bạn",
+                          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)
+                      ),
+                    ],
                   ),
+
+                  // Badge hiển thị Lớp bên phải
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.school, color: AppColors.white, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          _currentGrade,
+                          style: const TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  )
                 ],
               ),
             ),
 
             // ==========================================
-            // 2. DANH SÁCH CHỦ ĐỀ HOẶC THÔNG BÁO LỖI
+            // 2. DANH SÁCH CHỦ ĐỀ & GỢI Ý
             // ==========================================
             Padding(
               padding: const EdgeInsets.all(20),
@@ -184,10 +180,32 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 
   Widget _buildBodyContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Môn học", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
+
+        _buildSubjectsSection(),
+
+        const SizedBox(height: 30),
+
+        const Text("Lộ trình học tập (Gợi ý)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
+
+        _buildSuggestedLessonsSection(),
+
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  // Khối logic kết xuất danh sách môn học
+  Widget _buildSubjectsSection() {
     if (_isLoading) {
       return const Center(
         child: Padding(
-          padding: EdgeInsets.all(40.0),
+          padding: EdgeInsets.all(20.0),
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
       );
@@ -196,18 +214,16 @@ class _LearnScreenState extends State<LearnScreen> {
     if (_hasError) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.only(top: 40.0),
+          padding: const EdgeInsets.symmetric(vertical: 20.0),
           child: Column(
             children: [
-              Icon(Icons.wifi_off_rounded, size: 60, color: Colors.grey.shade400),
-              const SizedBox(height: 16),
-              const Text("Không thể kết nối đến máy chủ", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Icon(Icons.wifi_off_rounded, size: 40, color: Colors.grey.shade400),
               const SizedBox(height: 8),
-              Text("Vui lòng kiểm tra lại kết nối mạng của bạn.", style: TextStyle(color: Colors.grey.shade600)),
-              const SizedBox(height: 24),
+              const Text("Không thể tải danh sách môn học", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
               ElevatedButton.icon(
-                onPressed: _fetchAllData,
-                icon: const Icon(Icons.refresh),
+                onPressed: _fetchSubjects,
+                icon: const Icon(Icons.refresh, size: 16),
                 label: const Text("Thử lại"),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -222,62 +238,43 @@ class _LearnScreenState extends State<LearnScreen> {
     }
 
     if (_subjects.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 40.0),
-          child: Text("Chưa có môn học nào cho khối lớp này.", style: TextStyle(color: Colors.grey.shade600)),
-        ),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20.0),
+        child: Text("Bạn chưa đăng ký môn học nào.", style: TextStyle(color: Colors.grey.shade600)),
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Môn học", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
+      children: _subjects.map((subject) {
+        Color iconColor = AppColors.primary;
+        IconData iconData = Icons.calculate_outlined;
 
-        ..._subjects.map((subject) {
-          Color iconColor = AppColors.primary;
-          IconData iconData = Icons.calculate_outlined;
+        if (subject.subjectName.toLowerCase().contains("lý") || subject.subjectName.toLowerCase().contains("vật")) {
+          iconColor = AppColors.orangeFire;
+          iconData = Icons.bolt;
+        } else if (subject.subjectName.toLowerCase().contains("hóa")) {
+          iconColor = AppColors.green;
+          iconData = Icons.science;
+        } else if (subject.subjectName.toLowerCase().contains("toán")) {
+          iconColor = AppColors.primary;
+          iconData = Icons.functions;
+        }
 
-          if (subject.subjectName.toLowerCase().contains("lý") || subject.subjectName.toLowerCase().contains("vật")) {
-            iconColor = AppColors.orangeFire;
-            iconData = Icons.bolt;
-          } else if (subject.subjectName.toLowerCase().contains("hóa")) {
-            iconColor = AppColors.green;
-            iconData = Icons.science;
-          } else if (subject.subjectName.toLowerCase().contains("toán")) {
-            iconColor = AppColors.primary;
-            iconData = Icons.functions;
-          }
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildTopicCard(
-              title: subject.subjectName,
-              subtitle: "${subject.completedLessons}/${subject.totalLessons} bài • ⭐ ${subject.earnedXp}/${subject.totalXp} XP",
-              progress: subject.progress,
-              icon: iconData,
-              iconBgColor: iconColor,
-              data: subject,
-              earnedXp: subject.earnedXp,
-              totalLesson: subject.totalLessons,
-            ),
-          );
-        }).toList(),
-
-        const SizedBox(height: 30),
-
-        const Text("Lộ trình học tập (Gợi ý)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
-
-        // ==========================================
-        // KHU VỰC HIỂN THỊ GỢI Ý TỪ API
-        // ==========================================
-        _buildSuggestedLessonsSection(),
-
-        const SizedBox(height: 40),
-      ],
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _buildTopicCard(
+            title: subject.subjectName,
+            subtitle: "${subject.completedLessons}/${subject.totalLessons} bài • ⭐ ${subject.earnedXp}/${subject.totalXp} XP",
+            progress: subject.progress,
+            icon: iconData,
+            iconBgColor: iconColor,
+            data: subject,
+            earnedXp: subject.earnedXp,
+            totalLesson: subject.totalLessons,
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -311,21 +308,18 @@ class _LearnScreenState extends State<LearnScreen> {
     }
 
     List<Widget> items = [];
-    bool foundCurrent = false; // Biến đánh dấu đã tìm thấy bài học "đang học" chưa
+    bool foundCurrent = false;
 
     for (int i = 0; i < _suggestedLessons.length; i++) {
       final lesson = _suggestedLessons[i];
       TimelineStatus status;
 
       if (lesson.isCompleted) {
-        // Đã học
         status = TimelineStatus.completed;
       } else if (!foundCurrent) {
-        // Bài đầu tiên chưa học -> Đang học
         status = TimelineStatus.current;
         foundCurrent = true;
       } else {
-        // Các bài chưa học phía sau -> Sắp học
         status = TimelineStatus.upcoming;
       }
 
@@ -337,8 +331,6 @@ class _LearnScreenState extends State<LearnScreen> {
           number: (i + 1).toString(),
           isFirst: i == 0,
           isLast: i == _suggestedLessons.length - 1,
-
-          // Thêm sự kiện onTap vào đây
           onTap: status != TimelineStatus.completed
               ? () => _showGameOptions(context, lesson)
               : null,
@@ -348,6 +340,10 @@ class _LearnScreenState extends State<LearnScreen> {
 
     return Column(children: items);
   }
+
+  // (GIỮ NGUYÊN CÁC HÀM BÊN DƯỚI: _showGameOptions, _buildBottomSheetButton, _buildTopicCard, _buildTimelineItem)
+  // ...
+
 
   void _showGameOptions(BuildContext context, SuggestedLessonModel lesson) {
     // TODO: Khi API Backend cập nhật thêm các trường chi tiết cho bài gợi ý,
