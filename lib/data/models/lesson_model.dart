@@ -23,7 +23,7 @@ class LessonModel {
 
   factory LessonModel.fromJson(Map<String, dynamic> json) {
     return LessonModel(
-      lessonId: int.tryParse(json['lessonId']?.toString() ?? '0') ?? 0,
+      lessonId: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       lessonName: json['lessonName']?.toString() ?? 'Chưa có tên bài học',
       description: json['description']?.toString() ?? 'Chưa có mô tả',
       earnedXp: int.tryParse(json['earnedXp']?.toString() ?? '0') ?? 0,
