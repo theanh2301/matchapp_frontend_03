@@ -33,8 +33,7 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
   bool _isFinished = false;
 
   bool _isSaving = false;
-  final List<QuizProgressRequest> _submitQueue = [];
-
+  final List<QuizAnswerRequest> _submitQueue = [];
   @override
   void initState() {
     super.initState();
@@ -78,11 +77,9 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
   }
 
   void _onNextPressed() {
-    _submitQueue.add(QuizProgressRequest(
-        userId: widget.userId,
-        questionId: _quizzes[_currentIndex].id,
-        answerId: _quizzes[_currentIndex].answers[_selectedOptionIndex!].id,
-        answeredAt: DateTime.now().toIso8601String()
+    _submitQueue.add(QuizAnswerRequest(
+      questionId: _quizzes[_currentIndex].id,
+      answerId: _quizzes[_currentIndex].answers[_selectedOptionIndex!].id,
     ));
 
     if (_currentIndex < _quizzes.length - 1) {
@@ -101,12 +98,27 @@ class _QuizGameScreenState extends State<QuizGameScreen> {
       _isSaving = true;
     });
 
-    await _quizService.saveQuizProgress(_submitQueue);
+    SubmitQuizRequest requestPayload = SubmitQuizRequest(
+      userId: widget.userId,
+      lessonId: widget.lessonId, // Đảm bảo widget của bạn có truyền lessonId vào
+      answers: _submitQueue,
+    );
+
+    bool isSuccess = await _quizService.saveQuizProgress(requestPayload);
 
     if (mounted) {
       setState(() {
         _isSaving = false;
       });
+
+      if (!isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể lưu kết quả Quiz, vui lòng thử lại!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

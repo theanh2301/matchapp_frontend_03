@@ -10,7 +10,8 @@ class PracticeListScreen extends StatefulWidget {
   final Color themeColor;
   final IconData headerIcon;
   final String practiceType;
-  final int userId; // Thêm userId để gọi API lấy tiến độ cá nhân
+  final int userId;
+  final int gradeId;
 
   const PracticeListScreen({
     super.key,
@@ -19,7 +20,8 @@ class PracticeListScreen extends StatefulWidget {
     required this.themeColor,
     required this.headerIcon,
     required this.practiceType,
-    required this.userId, // Bắt buộc truyền userId từ màn hình trước
+    required this.userId,
+    required this.gradeId
   });
 
   @override
@@ -41,6 +43,7 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
       _futurePractices = _practiceService.getPracticeOverview(
         widget.practiceType,
         widget.userId,
+        widget.gradeId
       );
     });
   }

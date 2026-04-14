@@ -135,23 +135,39 @@ class _MathFlashcardScreenState extends State<MathFlashcardScreen> {
   Future<void> _handleFinishDeck(VoidCallback onSuccess) async {
     setState(() => _isSaving = true);
 
-    String lastReviewedTime = DateTime.now().toString().substring(0, 19);
-
-    List<FlashcardProgressRequest> requests = _swipeResults.map((data) {
-      return FlashcardProgressRequest(
-        isKnown: data['isKnown'],
-        lastReviewed: lastReviewedTime,
-        totalXP: 0,
+    // 1. Chuyển đổi dữ liệu vuốt thẻ thành danh sách FlashcardResultRequest (Model con)
+    List<FlashcardResultRequest> results = _swipeResults.map((data) {
+      return FlashcardResultRequest(
         flashcardId: data['flashcardId'],
-        userId: widget.userId,
+        isKnown: data['isKnown'],
       );
     }).toList();
 
-    await _flashcardService.saveMultipleProgress(requests);
+    // 2. Gom tất cả vào Request tổng (Model cha) khớp với Backend
+    SubmitFlashcardRequest requestPayload = SubmitFlashcardRequest(
+      userId: widget.userId,
+      lessonId: widget.lessonId,
+      flashcards: results,
+    );
+
+    // 3. Gọi hàm Service mới (Đảm bảo bạn dùng đúng tên hàm đã sửa ở service)
+    bool isSuccess = await _flashcardService.saveProgress(requestPayload);
 
     if (mounted) {
       setState(() => _isSaving = false);
-      onSuccess();
+
+      // 4. Kiểm tra kết quả trả về từ API
+      if (isSuccess) {
+        onSuccess(); // Chuyển màn hình hoặc hiển thị màn hình chúc mừng
+      } else {
+        // (Tuỳ chọn) Hiển thị thông báo lỗi nếu API gọi thất bại
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể lưu tiến độ, vui lòng thử lại!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

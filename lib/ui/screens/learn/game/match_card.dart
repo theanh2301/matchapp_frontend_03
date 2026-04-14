@@ -179,24 +179,42 @@ class _MatchCardGameScreenState extends State<MatchCardGameScreen> {
   Future<void> _saveProgressToServer() async {
     setState(() => _isSaving = true);
 
-    List<MatchCardProgressRequest> request = [
-      MatchCardProgressRequest(
-        totalPairs: _totalPairs,
-        correctPairs: _totalPairs,
-        timeTaken: _secondsElapsed,
-        totalXP: _score,
-        lessonId: widget.lessonId,
-        userId: widget.userId,
-      )
-    ];
+    // 1. Tạo danh sách chi tiết các cặp thẻ (MatchCardResultRequest)
+    // Giả định: Người dùng đã ghép đúng tất cả các cặp (từ 1 đến _totalPairs)
+    List<MatchCardResultRequest> results = [];
+    for (int i = 1; i <= _totalPairs; i++) {
+      results.add(
+          MatchCardResultRequest(
+            pairId: i, // ID giả định, nếu bạn có ID thực tế của thẻ thì truyền vào đây
+            isCorrect: true,
+          )
+      );
+    }
 
-    await _matchCardService.saveMatchCardProgress(request);
+    // 2. Bọc vào Request tổng (SubmitMatchCardRequest)
+    SubmitMatchCardRequest requestPayload = SubmitMatchCardRequest(
+      userId: widget.userId,
+      lessonId: widget.lessonId,
+      results: results,
+    );
+
+    // 3. Gọi service để lưu tiến độ
+    bool isSuccess = await _matchCardService.saveMatchCardProgress(requestPayload);
 
     if (mounted) {
       setState(() => _isSaving = false);
+
+      // (Tùy chọn) Xử lý khi lưu thành công hoặc thất bại
+      if (!isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể lưu kết quả, vui lòng thử lại!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
-
   void _playAgain() {
     setState(() {
       _isFinished = false;

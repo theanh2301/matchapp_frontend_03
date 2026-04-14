@@ -56,7 +56,6 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
     });
 
     try {
-      debugPrint("🚀 Đang gọi API Chapters với userId=${widget.userId} và subjectId=${widget.subjectId}");
       final result = await _learnService.getChaptersOverview(widget.userId, widget.subjectId);
 
       if (mounted) {
@@ -74,7 +73,6 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

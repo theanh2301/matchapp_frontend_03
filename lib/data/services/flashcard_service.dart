@@ -44,27 +44,30 @@ class FlashcardService {
     }
   }
 
-  Future<bool> saveMultipleProgress(List<FlashcardProgressRequest> requests) async {
-    if (requests.isEmpty) {
+  Future<bool> saveProgress(SubmitFlashcardRequest request) async {
+    if (request.flashcards.isEmpty) {
       print('⚠️ Không có thẻ nào để lưu.');
       return true;
     }
 
-    final url = Uri.parse('$baseUrl/progress/batch');
+    final url = Uri.parse('$baseUrl/progress');
 
-    print('🚀 ĐANG GỌI API BATCH FLASHCARD: $url (Lưu ${requests.length} thẻ cùng lúc)');
+    // 1. Chuyển đổi toàn bộ Request thành chuỗi JSON
+    String jsonBody = jsonEncode(request.toJson());
+
+    // 2. IN RA ĐỂ KIỂM TRA (Sẽ thấy rõ userId, lessonId và danh sách thẻ)
+    print('📦 PAYLOAD GỬI LÊN SERVER: $jsonBody');
+    print('🚀 ĐANG GỌI API BATCH FLASHCARD: $url (Lưu ${request.flashcards.length} thẻ cùng lúc)');
 
     try {
-      final List<Map<String, dynamic>> jsonData = requests.map((req) => req.toJson()).toList();
-
       final response = await http.post(
         url,
-        headers: ApiConstants.getAuthHeaders(),
-        body: jsonEncode(jsonData),
+        headers: ApiConstants.getAuthHeaders(), // Nhớ đảm bảo có 'Content-Type': 'application/json'
+        body: jsonBody, // Truyền thẳng chuỗi JSON vừa in vào đây
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('✅ Save ${requests.length} flashcards successfully');
+        print('✅ Save ${request.flashcards.length} flashcards successfully');
         return true;
       } else {
         print("❌ Lỗi lưu batch thẻ: Code ${response.statusCode} - ${response.body}");

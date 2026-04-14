@@ -41,27 +41,28 @@ class QuizService {
     }
   }
 
-  Future<bool> saveQuizProgress(List<QuizProgressRequest> requests) async {
-    if (requests.isEmpty) {
+  Future<bool> saveQuizProgress(SubmitQuizRequest request) async {
+    if (request.answers.isEmpty) {
       print('⚠️ Không có câu trả lời Quiz nào để lưu.');
       return true;
     }
 
-    final url = Uri.parse('$baseUrl/progress/batch');
+    final url = Uri.parse('$baseUrl/progress');
 
-    print('🚀 ĐANG GỌI API BATCH QUIZ: $url (Lưu ${requests.length} câu hỏi cùng lúc)');
+    String jsonBody = jsonEncode(request.toJson());
+
+    print('📦 PAYLOAD QUIZ GỬI LÊN: $jsonBody');
+    print('🚀 ĐANG GỌI API QUIZ: $url (Lưu ${request.answers.length} câu hỏi)');
 
     try {
-      final List<Map<String, dynamic>> jsonData = requests.map((req) => req.toJson()).toList();
-
       final response = await http.post(
         url,
         headers: ApiConstants.getAuthHeaders(),
-        body: jsonEncode(jsonData),
+        body: jsonBody,
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('✅ Save ${requests.length} quiz progress successfully');
+        print('✅ Save quiz progress successfully');
         return true;
       } else {
         print("❌ Lỗi lưu Quiz: Code ${response.statusCode} - ${response.body}");

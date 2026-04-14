@@ -1,28 +1,38 @@
-class MatchCardProgressRequest {
-  final int totalPairs;
-  final int correctPairs;
-  final int timeTaken;
-  final int totalXP;
-  final int lessonId;
-  final int userId;
+// Model cho chi tiết từng cặp thẻ
+class MatchCardResultRequest {
+  final int pairId;
+  final bool isCorrect;
 
-  MatchCardProgressRequest({
-    required this.totalPairs,
-    required this.correctPairs,
-    required this.timeTaken,
-    this.totalXP = 0,
-    required this.lessonId,
-    required this.userId,
+  MatchCardResultRequest({
+    required this.pairId,
+    required this.isCorrect,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'totalPairs': totalPairs,
-      'correctPairs': correctPairs,
-      'timeTaken': timeTaken,
-      'totalXP': totalXP,
-      'lessonId': lessonId,
+      'pairId': pairId,
+      'isCorrect': isCorrect,
+    };
+  }
+}
+
+// Model tổng chứa userId, lessonId và mảng results
+class SubmitMatchCardRequest {
+  final int userId;
+  final int lessonId;
+  final List<MatchCardResultRequest> results;
+
+  SubmitMatchCardRequest({
+    required this.userId,
+    required this.lessonId,
+    required this.results,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
       'userId': userId,
+      'lessonId': lessonId,
+      'results': results.map((r) => r.toJson()).toList(),
     };
   }
 }

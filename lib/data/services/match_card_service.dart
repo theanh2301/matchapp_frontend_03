@@ -42,27 +42,25 @@ class MatchCardService {
     }
   }
 
-  Future<bool> saveMatchCardProgress(List<MatchCardProgressRequest> requests) async {
-    if (requests.isEmpty) {
-      print('⚠️ Không có thẻ ghép nào để lưu.');
+  Future<bool> saveMatchCardProgress(SubmitMatchCardRequest request) async {
+    if (request.results.isEmpty) {
+      print('⚠️ Không có kết quả thẻ ghép nào để lưu.');
       return true;
     }
 
-    final url = Uri.parse('$baseUrl/progress/batch');
+    final url = Uri.parse('$baseUrl/progress');
 
-    print('🚀 ĐANG GỌI API MATCH CARD BATCH: $url (Lưu ${requests.length} kết quả)');
+    String jsonBody = jsonEncode(request.toJson());
 
     try {
-      final List<Map<String, dynamic>> jsonData = requests.map((req) => req.toJson()).toList();
-
       final response = await http.post(
         url,
-        headers: ApiConstants.getAuthHeaders(),
-        body: jsonEncode(jsonData),
+        headers: ApiConstants.getAuthHeaders(), // Đảm bảo có 'Content-Type': 'application/json' trong hàm này
+        body: jsonBody,
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('✅ Save ${requests.length} match card results successfully');
+        print('✅ Save match card results successfully');
         return true;
       } else {
         print("❌ Lỗi lưu Match Card: Code ${response.statusCode} - ${response.body}");

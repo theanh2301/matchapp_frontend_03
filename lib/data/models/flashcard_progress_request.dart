@@ -1,25 +1,39 @@
-class FlashcardProgressRequest {
-  final bool isKnown;
-  final String lastReviewed;
-  final int totalXP;
+// Model cho từng thẻ flashcard
+class FlashcardResultRequest {
   final int flashcardId;
-  final int userId;
+  final bool isKnown;
 
-  FlashcardProgressRequest({
-    required this.isKnown,
-    required this.lastReviewed,
-    required this.totalXP,
+  FlashcardResultRequest({
     required this.flashcardId,
-    required this.userId,
+    required this.isKnown,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'isKnown': isKnown,
-      'lastReviewed': lastReviewed,
-      'totalXP': totalXP,
       'flashcardId': flashcardId,
+      'isKnown': isKnown,
+    };
+  }
+}
+
+// Model tổng bao bọc userId, lessonId và danh sách thẻ
+class SubmitFlashcardRequest {
+  final int userId;
+  final int lessonId;
+  final List<FlashcardResultRequest> flashcards;
+
+  SubmitFlashcardRequest({
+    required this.userId,
+    required this.lessonId,
+    required this.flashcards,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
       'userId': userId,
+      'lessonId': lessonId,
+      // Map list các object con thành JSON
+      'flashcards': flashcards.map((f) => f.toJson()).toList(),
     };
   }
 }

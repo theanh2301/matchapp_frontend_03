@@ -358,6 +358,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   headerIcon: icon,
                   practiceType: practiceType,
                   userId: widget.userId,
+                  gradeId: widget.gradeId,
                 ),
               ),
             ).then((_) {

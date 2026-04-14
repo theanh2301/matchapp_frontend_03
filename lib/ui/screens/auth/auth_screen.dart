@@ -23,6 +23,9 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _confirmPassController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
 
+  // Biến lưu trữ ID lớp được chọn (từ 6 đến 12)
+  int? _selectedClassId;
+
   void _handleAuth() async {
     FocusScope.of(context).unfocus();
 
@@ -47,11 +50,13 @@ class _AuthScreenState extends State<AuthScreen> {
           );
         }
       } else {
+        // LƯU Ý: Bạn cần cập nhật hàm register trong AuthService để nhận thêm tham số classId
         await AuthService.register(
           _nameController.text.trim(),
           _emailController.text.trim(),
           _passController.text.trim(),
           _confirmPassController.text.trim(),
+          _selectedClassId!, // Truyền ID lớp vào đây
         );
         if (mounted) {
           _showSnackBar("Đăng ký thành công! Mời bạn đăng nhập.", AppColors.green);
@@ -59,6 +64,7 @@ class _AuthScreenState extends State<AuthScreen> {
             isLogin = true;
             _passController.clear();
             _confirmPassController.clear();
+            _selectedClassId = null; // Reset lại trường chọn lớp
           });
         }
       }
@@ -148,6 +154,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           onToggle: (value) => setState(() {
                             isLogin = value;
                             _formKey.currentState?.reset();
+                            _selectedClassId = null; // Reset lại dropdown khi chuyển tab
                           }),
                         ),
                         const SizedBox(height: 30),
@@ -163,6 +170,26 @@ class _AuthScreenState extends State<AuthScreen> {
                                   icon: Icons.person_outline,
                                   hint: "Họ và tên",
                                   validator: (val) => val!.isEmpty ? "Vui lòng nhập họ tên" : null,
+                                ),
+                                const SizedBox(height: 16),
+
+                                // === Thêm CustomDropdownField cho việc chọn lớp ===
+                                CustomDropdownField<int>(
+                                  value: _selectedClassId,
+                                  hint: "Chọn lớp",
+                                  icon: Icons.school_outlined,
+                                  items: [6, 7, 8, 9, 10, 11, 12]
+                                      .map((e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text("Lớp $e", style: const TextStyle(fontSize: 15)),
+                                  ))
+                                      .toList(),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _selectedClassId = val;
+                                    });
+                                  },
+                                  validator: (val) => val == null ? "Vui lòng chọn lớp của bạn" : null,
                                 ),
                                 const SizedBox(height: 16),
                               ],
@@ -230,6 +257,51 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// === WIDGET MỚI: CustomDropdownField ===
+// Copy phong cách thiết kế từ CustomTextField để giao diện đồng bộ 100%
+class CustomDropdownField<T> extends StatelessWidget {
+  final T? value;
+  final List<DropdownMenuItem<T>> items;
+  final String hint;
+  final IconData icon;
+  final void Function(T?)? onChanged;
+  final String? Function(T?)? validator;
+
+  const CustomDropdownField({
+    super.key,
+    required this.value,
+    required this.items,
+    required this.hint,
+    required this.icon,
+    this.onChanged,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
+      icon: Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey.shade400),
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: Colors.grey.shade400, size: 22),
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.grey.shade200)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.red.shade300)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Colors.red, width: 1.5)),
       ),
     );
   }

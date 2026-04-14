@@ -8,9 +8,9 @@ import '../../core/constants/api_constants.dart';
 class PracticeListService {
   final String baseUrl = "${ApiConstants.baseUrl}/practices";
 
-  Future<List<PracticeListModel>> getPracticeOverview(String practiceType, int userId) async {
+  Future<List<PracticeListModel>> getPracticeOverview(String practiceType, int userId, int gradeId) async {
     try {
-      final Uri url = Uri.parse('$baseUrl/overview?practiceType=$practiceType&userId=$userId');
+      final Uri url = Uri.parse('$baseUrl/overview?practiceType=$practiceType&userId=$userId&gradeId=$gradeId');
       debugPrint("🚀 ĐANG GỌI API OVERVIEW: $url");
 
       final response = await http.get(

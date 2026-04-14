@@ -40,6 +40,7 @@ class AuthService {
       String email,
       String password,
       String confirmPassword,
+      int gradeId, // Hoàn thiện tham số classId ở đây
       ) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/register'),
@@ -49,6 +50,7 @@ class AuthService {
         'email': email,
         'password': password,
         'confirmPassword': confirmPassword,
+        'gradeId': gradeId, // Truyền thêm classId vào body request
       }),
     );
 
