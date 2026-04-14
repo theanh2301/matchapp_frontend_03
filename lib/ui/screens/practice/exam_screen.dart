@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/exam_model.dart'; // Nơi chứa PracticeQuestionModel và PracticeAnswerModel
-import '../../../data/models/practice_progress_model.dart';
+import '../../../data/models/practice_progress_model.dart'; // Chứa PracticeProgressRequest và AnswerSubmit
 import '../../../data/services/exam_service.dart'; // Nơi chứa PracticeListService
 
 class QuizScreen extends StatefulWidget {
@@ -39,8 +39,7 @@ class _QuizScreenState extends State<QuizScreen> {
   Timer? _timer;
   Map<int, int> selectedAnswers = {}; // Lưu đáp án: {questionIndex: optionIndex}
   bool isSubmitted = false; // Đã nộp bài chưa?
-  // 🔥 THÊM BIẾN NÀY ĐỂ HIỂN THỊ LOADING KHI LƯU KẾT QUẢ
-  bool _isSaving = false;
+  bool _isSaving = false; // Hiển thị loading khi đang lưu kết quả
 
   @override
   void initState() {
@@ -56,7 +55,6 @@ class _QuizScreenState extends State<QuizScreen> {
 
       // KIỂM TRA: Nếu là làm lại câu sai thì gọi API câu sai, ngược lại gọi API bình thường
       if (widget.isRetryMistakes) {
-        // Gọi hàm mới vừa tạo
         data = await _practiceListService.getWrongQuestionsForExam(widget.practiceId, widget.userId);
       } else {
         data = await _practiceListService.getPracticeQuestions(widget.practiceId);
@@ -110,30 +108,37 @@ class _QuizScreenState extends State<QuizScreen> {
     });
   }
 
-  // Nộp bài
+  // Nộp bài - Đã được cập nhật theo chuẩn API mới gộp 1 cục data
   Future<void> _submitQuiz() async {
     setState(() {
       _isSaving = true; // Kích hoạt UI loading
       _timer?.cancel(); // Dừng đồng hồ
     });
 
-    List<PracticeProgressRequest> requests = [];
+    // Tạo danh sách câu trả lời theo chuẩn Model mới
+    List<AnswerSubmit> submittedAnswers = [];
 
-    // Duyệt qua các câu hỏi đã chọn đáp án để tạo list request
+    // Duyệt qua các câu hỏi đã chọn đáp án
     selectedAnswers.forEach((questionIndex, optionIndex) {
       final question = _questions[questionIndex];
       final selectedAnswer = question.answers[optionIndex];
 
-      requests.add(PracticeProgressRequest(
-        userId: widget.userId,
-        questionId: question.id, // Giả sử PracticeQuestionModel có thuộc tính id
-        answerId: selectedAnswer.id, // Giả sử PracticeAnswerModel có thuộc tính id
+      submittedAnswers.add(AnswerSubmit(
+        questionId: question.id,
+        answerId: selectedAnswer.id,
       ));
     });
 
     // Chỉ gọi API nếu người dùng có chọn ít nhất 1 đáp án
-    if (requests.isNotEmpty) {
-      await _practiceListService.saveQuizProgress(requests);
+    if (submittedAnswers.isNotEmpty) {
+      final request = PracticeProgressRequest(
+        userId: widget.userId,
+        practiceId: widget.practiceId,
+        answers: submittedAnswers,
+      );
+
+      // Gọi API 1 lần duy nhất
+      await _practiceListService.saveQuizProgress(request);
     }
 
     if (mounted) {
@@ -230,10 +235,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 isSubmitted = false;
                 selectedAnswers.clear();
                 currentQuestionIndex = 0;
-
-                // 4. Sửa 300 thành biến thời gian động gốc
                 timeLeft = widget.timeLimit * 60;
-
                 _startTimer();
               });
             },
@@ -276,7 +278,7 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  // Tách riêng hàm _buildBody để kiểm soát UI Đang tải / Lỗi / Có dữ liệu
+  // Tách riêng hàm _buildBody để kiểm soát UI
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
@@ -304,15 +306,7 @@ class _QuizScreenState extends State<QuizScreen> {
       );
     }
 
-    if (_errorMessage.isNotEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Text("Đã có lỗi xảy ra:\n$_errorMessage", style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
-        ),
-      );
-    }
-
+    // Đã xóa 1 đoạn check lỗi bị lặp ở đây cho code gọn gàng
     if (_errorMessage.isNotEmpty) {
       return Center(
         child: Padding(
@@ -328,7 +322,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
     // Lấy dữ liệu câu hỏi hiện tại
     final question = _questions[currentQuestionIndex];
-    final options = question.answers; // Danh sách PracticeAnswerModel
+    final options = question.answers;
     int? currentSelection = selectedAnswers[currentQuestionIndex];
 
     // Lấy giải thích từ đáp án đúng

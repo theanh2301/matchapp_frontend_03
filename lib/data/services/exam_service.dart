@@ -50,27 +50,25 @@ class PracticeListService {
     }
   }
 
-  Future<void> saveQuizProgress(List<PracticeProgressRequest> requests) async {
+  Future<void> saveQuizProgress(PracticeProgressRequest request) async {
     final url = Uri.parse('$baseUrl/progress');
 
-    for (var request in requests) {
-      debugPrint('🚀 ĐANG GỌI API QUIZ: $url (Lưu câu hỏi ID: ${request.questionId})');
+    debugPrint('🚀 ĐANG GỌI API QUIZ: $url (Lưu bài tập ID: ${request.practiceId} với ${request.answers.length} câu hỏi)');
 
-      try {
-        final response = await http.post(
-          url,
-          headers: ApiConstants.getAuthHeaders(),
-          body: jsonEncode(request.toJson()),
-        );
+    try {
+      final response = await http.post(
+        url,
+        headers: ApiConstants.getAuthHeaders(),
+        body: jsonEncode(request.toJson()), // Encode toàn bộ cục data 1 lần
+      );
 
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          debugPrint('✅ Call quiz progress successfully for Question ${request.questionId}');
-        } else {
-          debugPrint("❌ Lỗi lưu Quiz ${request.questionId}: ${response.body}");
-        }
-      } catch (e) {
-        debugPrint("❌ Lỗi kết nối khi lưu Quiz ${request.questionId}: $e");
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('✅ Lưu tiến độ Quiz thành công cho Practice ID: ${request.practiceId}');
+      } else {
+        debugPrint("❌ Lỗi lưu Quiz: ${response.statusCode} - ${response.body}");
       }
+    } catch (e) {
+      debugPrint("❌ Lỗi kết nối khi lưu Quiz: $e");
     }
   }
 
