@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/models/profile_model.dart';
+import '../../../data/services/profile_service.dart';
 import '../auth/auth_screen.dart';
+import 'user_info_screen.dart'; // Import màn hình mới
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final int userId;
   final int gradeId;
 
@@ -14,19 +17,59 @@ class ProfileScreen extends StatelessWidget {
   });
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final ProfileService _profileService = ProfileService();
+
+  ProfileResponse? _profileData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfileData();
+  }
+
+  Future<void> _fetchProfileData() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await _profileService.getProfile(widget.userId);
+      setState(() {
+        _profileData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      // Ẩn lỗi, để UI vẫn render với dữ liệu null (trống/mặc định)
+      setState(() {
+        _isLoading = false;
+      });
+      debugPrint("Lỗi tải Profile: $e");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final String gradeText = AuthService.gradeId != null ? "Lớp ${AuthService.gradeId}" : "Lớp 10";
-    final String roleText = AuthService.role == 'PREMIUM' ? "Premium" : (AuthService.role ?? "USER");
-    final String nameText = AuthService.userId != null ? "Học sinh ${AuthService.userId}" : "Người dùng mới";
-    final String initialChar = nameText.isNotEmpty ? nameText[0].toUpperCase() : "U";
+    // Không chặn màn hình bằng lỗi nữa, thay vào đó hiển thị vòng xoay mờ hoặc bỏ qua
+    // Map dữ liệu từ API (nếu null thì lấy mặc định)
+    final String gradeText = _profileData?.gradeName ?? "Lớp ${widget.gradeId}";
+    final bool isPremium = _profileData?.isPremium ?? false;
+    final String roleText = isPremium ? "Premium" : "Học sinh";
+    final String nameText = _profileData?.fullName ?? "Chưa có tên";
+    final String emailText = _profileData?.email ?? "Chưa cập nhật email";
+    final String initialChar = nameText.isNotEmpty && nameText != "Chưa có tên" ? nameText[0].toUpperCase() : "U";
 
     return Scaffold(
       backgroundColor: AppColors.bgLight,
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : SingleChildScrollView(
         child: Column(
           children: [
             Stack(
               children: [
+                // Background Header
                 Container(
                   height: 180,
                   width: double.infinity,
@@ -47,6 +90,8 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+
+                // Thẻ thông tin User
                 Container(
                   margin: const EdgeInsets.only(top: 130, left: 24, right: 24),
                   padding: const EdgeInsets.all(20),
@@ -59,7 +104,14 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Container(
+                          // Avatar
+                          _profileData?.avatarUrl != null && _profileData!.avatarUrl!.isNotEmpty
+                              ? CircleAvatar(
+                            radius: 35,
+                            backgroundImage: NetworkImage(_profileData!.avatarUrl!),
+                            backgroundColor: Colors.grey.shade200,
+                          )
+                              : Container(
                             width: 70,
                             height: 70,
                             decoration: const BoxDecoration(color: AppColors.purple, shape: BoxShape.circle),
@@ -71,15 +123,15 @@ class ProfileScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(nameText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                Text(nameText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
                                 const SizedBox(height: 4),
-                                Text("student@email.com", style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                                Text(emailText, style: TextStyle(color: Colors.grey.shade600, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
                                 const SizedBox(height: 8),
                                 Row(
                                   children: [
                                     _buildTag(gradeText, AppColors.primary),
                                     const SizedBox(width: 8),
-                                    _buildTag(roleText, AppColors.purple, icon: roleText == "Premium" ? Icons.workspace_premium : Icons.person),
+                                    _buildTag(roleText, isPremium ? Colors.amber.shade700 : AppColors.purple, icon: isPremium ? Icons.workspace_premium : Icons.person),
                                   ],
                                 )
                               ],
@@ -91,12 +143,13 @@ class ProfileScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(vertical: 20),
                         child: Divider(height: 1, color: Colors.black12),
                       ),
+                      // Thống kê nhanh
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildQuickStat("3,450", "Tổng XP"),
-                          _buildQuickStat("38", "Bài đã học"),
-                          _buildQuickStat("7", "Streak"),
+                          _buildQuickStat("${_profileData?.totalXp ?? 0}", "Tổng XP"),
+                          _buildQuickStat("${_profileData?.totalLesson ?? 0}", "Bài đã học"),
+                          _buildQuickStat("${_profileData?.streakDay ?? 0}", "Streak"),
                         ],
                       )
                     ],
@@ -105,24 +158,45 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
+
+            // Menu chức năng
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  _buildMenuButton(icon: Icons.person_outline, iconColor: AppColors.primary, title: "Thông tin cá nhân"),
+                  _buildMenuButton(
+                      icon: Icons.person_outline,
+                      iconColor: AppColors.primary,
+                      title: "Thông tin cá nhân",
+                      onTap: () {
+                        // Đẩy sang trang UserInfoScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => UserInfoScreen(
+                              userId: widget.userId,
+                              gradeId: widget.gradeId,
+                            ),
+                          ),
+                        ).then((_) {
+                          // Gọi lại API khi quay về để update UI nếu có thay đổi
+                          _fetchProfileData();
+                        });
+                      }
+                  ),
                   const SizedBox(height: 12),
-                  _buildMenuButton(icon: Icons.emoji_events_outlined, iconColor: AppColors.purple, title: "Thành tích"),
+                  _buildMenuButton(icon: Icons.emoji_events_outlined, iconColor: AppColors.purple, title: "Thành tích", onTap: () {}),
                   const SizedBox(height: 12),
-                  _buildMenuButton(icon: Icons.star_border, iconColor: Colors.amber, title: "Xếp hạng", trailingText: "#156"),
+                  _buildMenuButton(icon: Icons.notifications_none, iconColor: Colors.grey.shade600, title: "Thông báo", onTap: () {}),
                   const SizedBox(height: 12),
-                  _buildMenuButton(icon: Icons.notifications_none, iconColor: Colors.grey.shade600, title: "Thông báo"),
-                  const SizedBox(height: 12),
-                  _buildMenuButton(icon: Icons.settings_outlined, iconColor: Colors.grey.shade600, title: "Cài đặt"),
+                  _buildMenuButton(icon: Icons.settings_outlined, iconColor: Colors.grey.shade600, title: "Cài đặt", onTap: () {}),
                 ],
               ),
             ),
             const SizedBox(height: 32),
-            if (roleText != "Premium")
+
+            // Ẩn Banner Premium nếu user đã là Premium
+            if (!isPremium)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Container(
@@ -171,6 +245,8 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: 32),
+
+            // Nút Đăng xuất
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: OutlinedButton(
@@ -230,16 +306,14 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildTag(String text, Color color, {IconData? icon}) {
+    // Giữ nguyên như cũ
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 12, color: color),
-            const SizedBox(width: 4),
-          ],
+          if (icon != null) ...[Icon(icon, size: 12, color: color), const SizedBox(width: 4)],
           Text(text, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
         ],
       ),
@@ -247,6 +321,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildQuickStat(String value, String label) {
+    // Giữ nguyên như cũ
     return Column(
       children: [
         Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -256,13 +331,14 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuButton({required IconData icon, required Color iconColor, required String title, String? trailingText}) {
+  // ĐÃ THÊM ONTAP VÀO ĐÂY
+  Widget _buildMenuButton({required IconData icon, required Color iconColor, required String title, String? trailingText, VoidCallback? onTap}) {
     return Material(
       color: AppColors.white,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {},
+        onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -292,6 +368,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildPremiumFeatureCheck(String text) {
+    // Giữ nguyên như cũ
     return Row(
       children: [
         const Icon(Icons.check, color: AppColors.white, size: 14),
