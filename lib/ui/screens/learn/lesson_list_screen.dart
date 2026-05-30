@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:learn_math_app_03/data/models/lesson_model.dart';
 import 'package:learn_math_app_03/data/services/lesson_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../widget/global_ai_chat_button.dart';
 import 'game/flash_card.dart';
 import 'game/match_card.dart';
 import 'game/quiz_card.dart';
@@ -51,7 +52,10 @@ class _LessonListScreenState extends State<LessonListScreen> {
     });
 
     try {
-      final result = await _learnService.getLessonsOverview(widget.userId, widget.chapterId);
+      final result = await _learnService.getLessonsOverview(
+        widget.userId,
+        widget.chapterId,
+      );
       if (mounted) {
         setState(() {
           _lessons = result;
@@ -75,13 +79,22 @@ class _LessonListScreenState extends State<LessonListScreen> {
 
     switch (gameType) {
       case "flashcardsCompleted":
-        destination = FlashcardGameScreen(lessonId: currentLessonId, userId: widget.userId,);
+        destination = FlashcardGameScreen(
+          lessonId: currentLessonId,
+          userId: widget.userId,
+        );
         break;
       case "interactiveCompleted":
-        destination = QuizGameScreen(lessonId: currentLessonId, userId: widget.userId);
+        destination = QuizGameScreen(
+          lessonId: currentLessonId,
+          userId: widget.userId,
+        );
         break;
       default:
-        destination = MatchCardGameScreen(lessonId: currentLessonId, userId: widget.userId);
+        destination = MatchCardGameScreen(
+          lessonId: currentLessonId,
+          userId: widget.userId,
+        );
     }
 
     final result = await Navigator.push(
@@ -92,9 +105,12 @@ class _LessonListScreenState extends State<LessonListScreen> {
     // Cập nhật trạng thái giả lập trên UI nếu chơi xong
     if (result == true) {
       setState(() {
-        if (gameType == "flashcardsCompleted") _lessons[lessonIndex].isFlashcardDone = true;
-        if (gameType == "interactiveCompleted") _lessons[lessonIndex].isQuestionDone = true;
-        if (gameType == "matchingCompleted") _lessons[lessonIndex].isMatchCardDone = true;
+        if (gameType == "flashcardsCompleted")
+          _lessons[lessonIndex].isFlashcardDone = true;
+        if (gameType == "interactiveCompleted")
+          _lessons[lessonIndex].isQuestionDone = true;
+        if (gameType == "matchingCompleted")
+          _lessons[lessonIndex].isMatchCardDone = true;
       });
     }
   }
@@ -103,6 +119,10 @@ class _LessonListScreenState extends State<LessonListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgLight,
+      floatingActionButton: GlobalAiChatButton(
+        userId: widget.userId,
+        chatContext: 'Lesson list. Chapter: ${widget.chapterTitle}.',
+      ),
       appBar: AppBar(
         backgroundColor: widget.themeColor,
         elevation: 0,
@@ -123,11 +143,24 @@ class _LessonListScreenState extends State<LessonListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.chapterTitle, style: const TextStyle(color: AppColors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(
+                    widget.chapterTitle,
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text(widget.chapterSubtitle, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                  Text(
+                    widget.chapterSubtitle,
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
                   const SizedBox(height: 16),
-                  Text(widget.progressText, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                  Text(
+                    widget.progressText,
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
                 ],
               ),
             ),
@@ -147,7 +180,9 @@ class _LessonListScreenState extends State<LessonListScreen> {
     if (_isLoading) {
       return Padding(
         padding: const EdgeInsets.only(top: 40),
-        child: Center(child: CircularProgressIndicator(color: widget.themeColor)),
+        child: Center(
+          child: CircularProgressIndicator(color: widget.themeColor),
+        ),
       );
     }
 
@@ -159,8 +194,17 @@ class _LessonListScreenState extends State<LessonListScreen> {
             children: [
               Icon(Icons.wifi_off, size: 48, color: Colors.grey.shade400),
               const SizedBox(height: 16),
-              const Text("Không thể tải danh sách bài học", style: TextStyle(fontWeight: FontWeight.bold)),
-              TextButton(onPressed: _fetchLessons, child: Text("Thử lại", style: TextStyle(color: widget.themeColor)))
+              const Text(
+                "Không thể tải danh sách bài học",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextButton(
+                onPressed: _fetchLessons,
+                child: Text(
+                  "Thử lại",
+                  style: TextStyle(color: widget.themeColor),
+                ),
+              ),
             ],
           ),
         ),
@@ -171,7 +215,10 @@ class _LessonListScreenState extends State<LessonListScreen> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.only(top: 40),
-          child: Text("Chưa có bài học nào trong chương này.", style: TextStyle(color: Colors.grey.shade500)),
+          child: Text(
+            "Chưa có bài học nào trong chương này.",
+            style: TextStyle(color: Colors.grey.shade500),
+          ),
         ),
       );
     }
@@ -201,8 +248,12 @@ class _LessonListScreenState extends State<LessonListScreen> {
     bool isActive = true;
 
     // Đổi nền trắng của ô thành màu tím trong suốt (opacity 0.15)
-    Color cardBgColor = isActive ? themeColor.withOpacity(0.15) : Colors.grey.shade200.withOpacity(0.4);
-    Color cardBorderColor = isActive ? themeColor.withOpacity(0.3) : Colors.grey.shade300;
+    Color cardBgColor = isActive
+        ? themeColor.withOpacity(0.15)
+        : Colors.grey.shade200.withOpacity(0.4);
+    Color cardBorderColor = isActive
+        ? themeColor.withOpacity(0.3)
+        : Colors.grey.shade300;
 
     Color numberBgColor = isActive ? AppColors.white : Colors.grey.shade300;
     Color numberBorderColor = isActive ? themeColor : Colors.grey.shade300;
@@ -225,16 +276,18 @@ class _LessonListScreenState extends State<LessonListScreen> {
                 alignment: Alignment.center,
                 child: Text(
                   (index + 1).toString(),
-                  style: TextStyle(color: isActive ? themeColor : Colors.grey.shade600, fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: isActive ? themeColor : Colors.grey.shade600,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               if (isActive) ...[
                 const SizedBox(height: 8),
-                Expanded(
-                  child: Container(width: 1.5, color: cardBorderColor),
-                ),
+                Expanded(child: Container(width: 1.5, color: cardBorderColor)),
                 const SizedBox(height: 8),
-              ]
+              ],
             ],
           ),
           const SizedBox(width: 16),
@@ -257,21 +310,34 @@ class _LessonListScreenState extends State<LessonListScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                            lessonData.lessonName,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isActive ? Colors.black87 : Colors.grey.shade500)
+                          lessonData.lessonName,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isActive
+                                ? Colors.black87
+                                : Colors.grey.shade500,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       // Nút tiến độ 2/3 (Đổi nền sang trắng)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                            color: AppColors.white, // Nền trắng
-                            borderRadius: BorderRadius.circular(8)
+                          color: AppColors.white, // Nền trắng
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           "${lessonData.completedGamesCount}/3",
-                          style: TextStyle(color: themeColor, fontSize: 13, fontWeight: FontWeight.bold), // Chữ màu tím
+                          style: TextStyle(
+                            color: themeColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ), // Chữ màu tím
                         ),
                       ),
                     ],
@@ -280,8 +346,8 @@ class _LessonListScreenState extends State<LessonListScreen> {
 
                   // DÒNG 2: Phụ đề
                   Text(
-                      lessonData.description,
-                      style: TextStyle(fontSize: 14, color: Colors.black54)
+                    lessonData.description,
+                    style: TextStyle(fontSize: 14, color: Colors.black54),
                   ),
                   const SizedBox(height: 16),
 
@@ -293,21 +359,27 @@ class _LessonListScreenState extends State<LessonListScreen> {
                         iconData: Icons.style,
                         isCompleted: lessonData.isFlashcardDone,
                         themeColor: themeColor,
-                        onTap: () => _playGame(index, "flashcardsCompleted", "Lật thẻ"),
+                        onTap: () =>
+                            _playGame(index, "flashcardsCompleted", "Lật thẻ"),
                       ),
                       _buildGameOption(
                         title: "Quiz",
                         iconData: Icons.auto_awesome,
                         isCompleted: lessonData.isQuestionDone,
                         themeColor: themeColor,
-                        onTap: () => _playGame(index, "interactiveCompleted", "Học tương tác"),
+                        onTap: () => _playGame(
+                          index,
+                          "interactiveCompleted",
+                          "Học tương tác",
+                        ),
                       ),
                       _buildGameOption(
                         title: "MatchCard",
                         iconData: Icons.ads_click,
                         isCompleted: lessonData.isMatchCardDone,
                         themeColor: themeColor,
-                        onTap: () => _playGame(index, "matchingCompleted", "Ghép thẻ"),
+                        onTap: () =>
+                            _playGame(index, "matchingCompleted", "Ghép thẻ"),
                       ),
                     ],
                   ),
@@ -331,9 +403,15 @@ class _LessonListScreenState extends State<LessonListScreen> {
     // Nếu chưa hoàn thành (isCompleted == false):
     // Đổi item đang tím thành nền trắng (AppColors.white)
     // Và chữ trắng thành chữ tím (themeColor) để dễ nhìn
-    final Color bgColor = isCompleted ? const Color(0xFFE6F9F0) : AppColors.white;
-    final Color contentColor = isCompleted ? const Color(0xFF00A86B) : themeColor;
-    final IconData trailingIcon = isCompleted ? Icons.check_circle_outline : Icons.chevron_right;
+    final Color bgColor = isCompleted
+        ? const Color(0xFFE6F9F0)
+        : AppColors.white;
+    final Color contentColor = isCompleted
+        ? const Color(0xFF00A86B)
+        : themeColor;
+    final IconData trailingIcon = isCompleted
+        ? Icons.check_circle_outline
+        : Icons.chevron_right;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),

@@ -8,16 +8,13 @@ import 'chapter_list_screen.dart';
 import 'game/flash_card.dart';
 import 'game/match_card.dart';
 import 'game/quiz_card.dart';
+import '../../utils/responsive.dart';
 
 class LearnScreen extends StatefulWidget {
   final int userId;
   final int gradeId;
 
-  const LearnScreen({
-    super.key,
-    required this.userId,
-    required this.gradeId,
-  });
+  const LearnScreen({super.key, required this.userId, required this.gradeId});
 
   @override
   State<LearnScreen> createState() => _LearnScreenState();
@@ -97,6 +94,8 @@ class _LearnScreenState extends State<LearnScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = Responsive.horizontalPadding(context);
+
     return Scaffold(
       backgroundColor: AppColors.bgLight,
       body: SingleChildScrollView(
@@ -112,49 +111,83 @@ class _LearnScreenState extends State<LearnScreen> {
                   bottomRight: Radius.circular(24),
                 ),
               ),
-              padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 30),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                          "Học tập",
-                          style: TextStyle(color: AppColors.white, fontSize: 28, fontWeight: FontWeight.bold)
+              padding: EdgeInsets.only(
+                top: Responsive.headerTopPadding(context),
+                left: horizontalPadding,
+                right: horizontalPadding,
+                bottom: 30,
+              ),
+              child: Responsive.centered(
+                context: context,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Học tập",
+                            style: TextStyle(
+                              color: AppColors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Tiếp tục hành trình của bạn",
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                          "Tiếp tục hành trình của bạn",
-                          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.school, color: AppColors.white, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Lớp ${widget.gradeId}",
-                          style: const TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.5),
+                          width: 1,
                         ),
-                      ],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.school,
+                            color: AppColors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Lớp ${widget.gradeId}",
+                            style: const TextStyle(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  )
-                ],
+                  ],
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: _buildBodyContent(),
+            Responsive.centered(
+              context: context,
+              child: Padding(
+                padding: EdgeInsets.all(horizontalPadding),
+                child: _buildBodyContent(),
+              ),
             ),
           ],
         ),
@@ -166,11 +199,17 @@ class _LearnScreenState extends State<LearnScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Môn học", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text(
+          "Môn học",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 16),
         _buildSubjectsSection(),
         const SizedBox(height: 30),
-        const Text("Lộ trình học tập (Gợi ý)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text(
+          "Lộ trình học tập (Gợi ý)",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 16),
         _buildSuggestedLessonsSection(),
         const SizedBox(height: 40),
@@ -194,9 +233,16 @@ class _LearnScreenState extends State<LearnScreen> {
           padding: const EdgeInsets.symmetric(vertical: 20.0),
           child: Column(
             children: [
-              Icon(Icons.wifi_off_rounded, size: 40, color: Colors.grey.shade400),
+              Icon(
+                Icons.wifi_off_rounded,
+                size: 40,
+                color: Colors.grey.shade400,
+              ),
               const SizedBox(height: 8),
-              const Text("Không thể tải danh sách môn học", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              const Text(
+                "Không thể tải danh sách môn học",
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: _fetchSubjects,
@@ -205,9 +251,11 @@ class _LearnScreenState extends State<LearnScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -217,7 +265,10 @@ class _LearnScreenState extends State<LearnScreen> {
     if (_subjects.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 20.0),
-        child: Text("Bạn chưa đăng ký môn học nào.", style: TextStyle(color: Colors.grey.shade600)),
+        child: Text(
+          "Bạn chưa đăng ký môn học nào.",
+          style: TextStyle(color: Colors.grey.shade600),
+        ),
       );
     }
 
@@ -227,7 +278,8 @@ class _LearnScreenState extends State<LearnScreen> {
         Color iconColor = AppColors.primary;
         IconData iconData = Icons.calculate_outlined;
 
-        if (subject.subjectName.toLowerCase().contains("lý") || subject.subjectName.toLowerCase().contains("vật")) {
+        if (subject.subjectName.toLowerCase().contains("lý") ||
+            subject.subjectName.toLowerCase().contains("vật")) {
           iconColor = AppColors.orangeFire;
           iconData = Icons.bolt;
         } else if (subject.subjectName.toLowerCase().contains("hóa")) {
@@ -242,7 +294,8 @@ class _LearnScreenState extends State<LearnScreen> {
           padding: const EdgeInsets.only(bottom: 12),
           child: _buildTopicCard(
             title: subject.subjectName,
-            subtitle: "${subject.completedLessons}/${subject.totalLessons} bài • ⭐ ${subject.earnedXp}/${subject.totalXp} XP",
+            subtitle:
+                "${subject.completedLessons}/${subject.totalLessons} bài • ⭐ ${subject.earnedXp}/${subject.totalXp} XP",
             progress: subject.progress,
             icon: iconData,
             iconBgColor: iconColor,
@@ -269,18 +322,24 @@ class _LearnScreenState extends State<LearnScreen> {
       return Center(
         child: Column(
           children: [
-            const Text("Lỗi tải gợi ý học tập", style: TextStyle(color: Colors.red)),
+            const Text(
+              "Lỗi tải gợi ý học tập",
+              style: TextStyle(color: Colors.red),
+            ),
             TextButton(
               onPressed: _fetchSuggestedLessons,
               child: const Text("Tải lại gợi ý"),
-            )
+            ),
           ],
         ),
       );
     }
 
     if (_suggestedLessons.isEmpty) {
-      return const Text("Không có bài học gợi ý nào lúc này.", style: TextStyle(color: Colors.grey));
+      return const Text(
+        "Không có bài học gợi ý nào lúc này.",
+        style: TextStyle(color: Colors.grey),
+      );
     }
 
     List<Widget> items = [];
@@ -335,10 +394,17 @@ class _LearnScreenState extends State<LearnScreen> {
             children: [
               Text(
                 "Học: ${lesson.lessonName}",
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
               const SizedBox(height: 8),
-              const Text("Chọn phần bạn muốn học ngay", style: TextStyle(color: Colors.black54)),
+              const Text(
+                "Chọn phần bạn muốn học ngay",
+                style: TextStyle(color: Colors.black54),
+              ),
               const SizedBox(height: 24),
               _buildBottomSheetButton(
                 title: "Flashcards",
@@ -347,8 +413,15 @@ class _LearnScreenState extends State<LearnScreen> {
                 isCompleted: isFlashcardDone,
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => FlashcardGameScreen(lessonId: lesson.lessonId, userId: widget.userId)));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FlashcardGameScreen(
+                        lessonId: lesson.lessonId,
+                        userId: widget.userId,
+                      ),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 12),
@@ -359,8 +432,15 @@ class _LearnScreenState extends State<LearnScreen> {
                 isCompleted: isQuizDone,
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => QuizGameScreen(lessonId: lesson.lessonId, userId: widget.userId)));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => QuizGameScreen(
+                        lessonId: lesson.lessonId,
+                        userId: widget.userId,
+                      ),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 12),
@@ -371,8 +451,15 @@ class _LearnScreenState extends State<LearnScreen> {
                 isCompleted: isMatchDone,
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => MatchCardGameScreen(lessonId: lesson.lessonId, userId: widget.userId)));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MatchCardGameScreen(
+                        lessonId: lesson.lessonId,
+                        userId: widget.userId,
+                      ),
+                    ),
+                  );
                 },
               ),
             ],
@@ -391,7 +478,9 @@ class _LearnScreenState extends State<LearnScreen> {
   }) {
     final Color bgColor = isCompleted ? const Color(0xFFE6F9F0) : Colors.white;
     final Color contentColor = isCompleted ? const Color(0xFF00A86B) : color;
-    final IconData trailingIcon = isCompleted ? Icons.check_circle : Icons.chevron_right;
+    final IconData trailingIcon = isCompleted
+        ? Icons.check_circle
+        : Icons.chevron_right;
 
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
@@ -399,8 +488,8 @@ class _LearnScreenState extends State<LearnScreen> {
         foregroundColor: contentColor,
         elevation: 0,
         side: BorderSide(
-            color: isCompleted ? Colors.transparent : color.withOpacity(0.3),
-            width: 1.5
+          color: isCompleted ? Colors.transparent : color.withOpacity(0.3),
+          width: 1.5,
         ),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -410,7 +499,12 @@ class _LearnScreenState extends State<LearnScreen> {
         children: [
           Icon(icon, size: 24),
           const SizedBox(width: 16),
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
           Icon(trailingIcon),
         ],
       ),
@@ -425,7 +519,7 @@ class _LearnScreenState extends State<LearnScreen> {
     required Color iconBgColor,
     required SubjectModel data,
     required int totalLesson,
-    required int earnedXp
+    required int earnedXp,
   }) {
     return GestureDetector(
       onTap: () {
@@ -443,7 +537,7 @@ class _LearnScreenState extends State<LearnScreen> {
               earnedXP: earnedXp,
               totalLessons: totalLesson,
               userId: widget.userId,
-              gradeId: widget.gradeId
+              gradeId: widget.gradeId,
             ),
           ),
         );
@@ -454,7 +548,11 @@ class _LearnScreenState extends State<LearnScreen> {
           color: AppColors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
           ],
           border: Border.all(color: Colors.grey.shade100),
         ),
@@ -545,21 +643,54 @@ class _LearnScreenState extends State<LearnScreen> {
               children: [
                 Column(
                   children: [
-                    Expanded(flex: 1, child: Container(width: 2, color: isFirst ? Colors.transparent : Colors.grey.shade300)),
-                    Expanded(flex: 1, child: Container(width: 2, color: isLast ? Colors.transparent : Colors.grey.shade300)),
+                    Expanded(
+                      flex: 1,
+                      child: Container(
+                        width: 2,
+                        color: isFirst
+                            ? Colors.transparent
+                            : Colors.grey.shade300,
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Container(
+                        width: 2,
+                        color: isLast
+                            ? Colors.transparent
+                            : Colors.grey.shade300,
+                      ),
+                    ),
                   ],
                 ),
                 Container(
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: status == TimelineStatus.completed ? AppColors.green : (status == TimelineStatus.current ? AppColors.primary : Colors.grey.shade200),
+                    color: status == TimelineStatus.completed
+                        ? AppColors.green
+                        : (status == TimelineStatus.current
+                              ? AppColors.primary
+                              : Colors.grey.shade200),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
                   child: status == TimelineStatus.completed
-                      ? const Icon(Icons.check, color: AppColors.white, size: 16)
-                      : Text(number ?? "", style: TextStyle(color: status == TimelineStatus.current ? AppColors.white : Colors.grey.shade600, fontWeight: FontWeight.bold, fontSize: 12)),
+                      ? const Icon(
+                          Icons.check,
+                          color: AppColors.white,
+                          size: 16,
+                        )
+                      : Text(
+                          number ?? "",
+                          style: TextStyle(
+                            color: status == TimelineStatus.current
+                                ? AppColors.white
+                                : Colors.grey.shade600,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -579,7 +710,15 @@ class _LearnScreenState extends State<LearnScreen> {
                       color: bgColor,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: borderColor, width: 1.5),
-                      boxShadow: status == TimelineStatus.current ? [BoxShadow(color: AppColors.primary.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))] : [],
+                      boxShadow: status == TimelineStatus.current
+                          ? [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : [],
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -588,21 +727,53 @@ class _LearnScreenState extends State<LearnScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: status == TimelineStatus.upcoming ? Colors.grey.shade600 : Colors.black87)),
+                              Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: status == TimelineStatus.upcoming
+                                      ? Colors.grey.shade600
+                                      : Colors.black87,
+                                ),
+                              ),
                               const SizedBox(height: 4),
-                              Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                              Text(
+                                subtitle,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         if (status == TimelineStatus.current)
                           Container(
                             margin: const EdgeInsets.only(right: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12)),
-                            child: const Text("Đang học", style: TextStyle(color: AppColors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              "Đang học",
+                              style: TextStyle(
+                                color: AppColors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         if (status != TimelineStatus.completed)
-                          Icon(Icons.play_circle_fill, color: AppColors.primary.withOpacity(0.8), size: 28),
+                          Icon(
+                            Icons.play_circle_fill,
+                            color: AppColors.primary.withOpacity(0.8),
+                            size: 28,
+                          ),
                       ],
                     ),
                   ),

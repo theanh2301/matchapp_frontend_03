@@ -1,9 +1,11 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../../core/constants/api_constants.dart';
-import '../models/subject_model.dart';
-import 'package:flutter/foundation.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+
+import '../../core/constants/api_constants.dart';
+import '../demo/demo_data.dart';
+import '../models/subject_model.dart';
 import '../models/subject_progress_model.dart';
 
 class SubjectService {
@@ -11,64 +13,61 @@ class SubjectService {
 
   Future<List<SubjectModel>> getSubjectsProgress(int userId) async {
     try {
-      final Uri url = Uri.parse('$baseUrl/overview?userId=$userId');
-
-      final response = await http.get(
-        url,
-        headers: ApiConstants.getAuthHeaders(),
-      ).timeout(const Duration(seconds: 10));
-
-      final dynamic decodedData = jsonDecode(utf8.decode(response.bodyBytes));
-      debugPrint("🚀 Call subject successfully");
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/overview?userId=$userId'),
+            headers: ApiConstants.getAuthHeaders(),
+          )
+          .timeout(ApiConstants.requestTimeout);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        final dynamic decodedData = jsonDecode(utf8.decode(response.bodyBytes));
         if (decodedData is List) {
-          return decodedData.map((item) => SubjectModel.fromJson(item as Map<String, dynamic>)).toList();
-        } else if (decodedData is Map<String, dynamic>) {
-          if (decodedData.containsKey('data') && decodedData['data'] is List) {
-            return (decodedData['data'] as List).map((item) => SubjectModel.fromJson(item as Map<String, dynamic>)).toList();
-          } else if (decodedData.containsKey('result') && decodedData['result'] is List) {
-            return (decodedData['result'] as List).map((item) => SubjectModel.fromJson(item as Map<String, dynamic>)).toList();
-          } else if (decodedData.containsKey('content') && decodedData['content'] is List) {
-            return (decodedData['content'] as List).map((item) => SubjectModel.fromJson(item as Map<String, dynamic>)).toList();
-          } else {
-            throw Exception("Không tìm thấy danh sách trong Object. Nội dung: $decodedData");
-          }
-        } else {
-          throw Exception("Định dạng dữ liệu lạ: ${decodedData.runtimeType}");
+          return decodedData
+              .map(
+                (item) => SubjectModel.fromJson(item as Map<String, dynamic>),
+              )
+              .toList();
         }
-      } else {
-        throw Exception("Lỗi server ${response.statusCode}: $decodedData");
+
+        if (decodedData is Map<String, dynamic>) {
+          final rawList =
+              decodedData['data'] ??
+              decodedData['result'] ??
+              decodedData['content'];
+          if (rawList is List) {
+            return rawList
+                .map(
+                  (item) => SubjectModel.fromJson(item as Map<String, dynamic>),
+                )
+                .toList();
+          }
+        }
       }
     } catch (e) {
-      debugPrint("❌ LỖI THẬT SỰ LÀ: $e");
-      throw Exception("Lỗi xử lý: $e");
+      debugPrint('Subject overview offline fallback: $e');
     }
+
+    return DemoData.subjects(10);
   }
 
   Future<List<SubjectProgressModel>> fetchSubjectProgress(int userId) async {
-    final url = '$baseUrl/progress?userId=$userId';
-
-    print('🌐 ĐANG GỌI API: $url');
-
     try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: ApiConstants.getAuthHeaders(),
-      );
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/progress?userId=$userId'),
+            headers: ApiConstants.getAuthHeaders(),
+          )
+          .timeout(ApiConstants.requestTimeout);
 
-      print('📦 MÃ PHẢN HỒI (Status Code): ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         return data.map((json) => SubjectProgressModel.fromJson(json)).toList();
-      } else {
-        print('❌ LỖI SERVER: ${response.statusCode} - Nội dung: ${response.body}');
-        throw Exception('Lỗi server: ${response.statusCode}');
       }
     } catch (e) {
-      print('🚫 LỖI KẾT NỐI: $e');
-      throw Exception('Không thể kết nối đến server. Vui lòng kiểm tra mạng hoặc backend.');
+      debugPrint('Subject progress offline fallback: $e');
     }
+
+    return DemoData.subjectProgress();
   }
 }

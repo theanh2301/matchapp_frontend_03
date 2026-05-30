@@ -1,28 +1,32 @@
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import '../../../core/constants/api_constants.dart';
+
+import '../../core/constants/api_constants.dart';
+import '../demo/demo_data.dart';
 import '../models/daily_challenge_model.dart';
 
 class DailyChallengeService {
-  // Thay đổi baseUrl cho phù hợp với API /today/{userId}
   final String baseUrl = "${ApiConstants.baseUrl}/challenges/today";
 
   Future<List<DailyChallengeModel>> getTodayChallenges(int userId) async {
-    final url = Uri.parse("$baseUrl/$userId");
     try {
-      final response = await http.get(
-        url,
-        headers: ApiConstants.getAuthHeaders(), // Nhớ đính kèm Token
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(
+            Uri.parse("$baseUrl/$userId"),
+            headers: ApiConstants.getAuthHeaders(),
+          )
+          .timeout(ApiConstants.requestTimeout);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
         return data.map((e) => DailyChallengeModel.fromJson(e)).toList();
-      } else {
-        throw Exception("Lỗi tải thử thách: ${response.statusCode}");
       }
     } catch (e) {
-      throw Exception("Lỗi kết nối API Daily Challenge: $e");
+      debugPrint('Daily challenges offline fallback: $e');
     }
+
+    return DemoData.dailyChallenges();
   }
 }

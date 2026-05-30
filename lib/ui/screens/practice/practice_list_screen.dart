@@ -3,6 +3,8 @@ import 'package:learn_math_app_03/data/models/practice_list_model.dart';
 import 'package:learn_math_app_03/data/services/practice_list_service.dart';
 import '../../../core/theme/app_colors.dart';
 import 'exam_screen.dart';
+import '../../utils/responsive.dart';
+import '../../widget/global_ai_chat_button.dart';
 
 class PracticeListScreen extends StatefulWidget {
   final String title;
@@ -21,7 +23,7 @@ class PracticeListScreen extends StatefulWidget {
     required this.headerIcon,
     required this.practiceType,
     required this.userId,
-    required this.gradeId
+    required this.gradeId,
   });
 
   @override
@@ -43,15 +45,21 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
       _futurePractices = _practiceService.getPracticeOverview(
         widget.practiceType,
         widget.userId,
-        widget.gradeId
+        widget.gradeId,
       );
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = Responsive.horizontalPadding(context);
+
     return Scaffold(
       backgroundColor: AppColors.bgLight,
+      floatingActionButton: GlobalAiChatButton(
+        userId: widget.userId,
+        chatContext: 'Practice list. Title: ${widget.title}.',
+      ),
       body: CustomScrollView(
         slivers: [
           // ==========================================
@@ -73,12 +81,17 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
                     end: Alignment.bottomRight,
                     colors: widget.themeColor == AppColors.orange
                         ? [const Color(0xFFFFB75E), const Color(0xFFED8F03)]
-                        : [widget.themeColor.withOpacity(0.7), widget.themeColor],
+                        : [
+                            widget.themeColor.withOpacity(0.7),
+                            widget.themeColor,
+                          ],
                   ),
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                    ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -144,7 +157,9 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
 
               if (snapshot.hasError) {
                 return SliverFillRemaining(
-                  child: Center(child: Text('Đã có lỗi xảy ra: ${snapshot.error}')),
+                  child: Center(
+                    child: Text('Đã có lỗi xảy ra: ${snapshot.error}'),
+                  ),
                 );
               }
 
@@ -152,33 +167,32 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
 
               if (items.isEmpty) {
                 return const SliverFillRemaining(
-                  child: Center(child: Text('Hiện chưa có bài tập nào cho độ khó này.')),
+                  child: Center(
+                    child: Text('Hiện chưa có bài tập nào cho độ khó này.'),
+                  ),
                 );
               }
 
               return SliverPadding(
-                padding: const EdgeInsets.only(
+                padding: EdgeInsets.only(
                   top: 24,
-                  left: 24,
-                  right: 24,
+                  left: horizontalPadding,
+                  right: horizontalPadding,
                   bottom: 40,
                 ),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                      final item = items[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: _buildPracticeCard(
-                          context,
-                          index + 1,
-                          item,
-                          widget.themeColor,
-                        ),
-                      );
-                    },
-                    childCount: items.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final item = items[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: _buildPracticeCard(
+                        context,
+                        index + 1,
+                        item,
+                        widget.themeColor,
+                      ),
+                    );
+                  }, childCount: items.length),
                 ),
               );
             },
@@ -191,12 +205,11 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
   // WIDGET CON: Xây dựng từng thẻ bài tập lấy từ Model
   // WIDGET CON: Xây dựng từng thẻ bài tập lấy từ Model
   Widget _buildPracticeCard(
-      BuildContext context,
-      int index,
-      PracticeListModel item,
-      Color themeColor,
-      ) {
-
+    BuildContext context,
+    int index,
+    PracticeListModel item,
+    Color themeColor,
+  ) {
     // --- BẮT ĐẦU LOGIC XỬ LÝ MÀU SẮC DỰA VÀO TIẾN ĐỘ VÀ ĐIỂM SỐ ---
     Color cardColor = Colors.white;
     Color borderColor = Colors.transparent;
@@ -212,7 +225,8 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
         borderColor = Colors.red.shade300;
         iconBgColor = Colors.red;
         scoreColor = Colors.red.shade700;
-        trailingIcon = Icons.close; // Đổi icon thành dấu X nếu muốn, hoặc dùng Icons.warning
+        trailingIcon = Icons
+            .close; // Đổi icon thành dấu X nếu muốn, hoặc dùng Icons.warning
       } else {
         // Từ 70% trở lên: Tô màu xanh
         cardColor = Colors.green.shade50;
@@ -239,13 +253,12 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                QuizScreen(
-                  practiceId: item.id,
-                  title: item.title,
-                  userId: widget.userId,
-                  timeLimit: item.timeLimit,
-                ),
+            builder: (context) => QuizScreen(
+              practiceId: item.id,
+              title: item.title,
+              userId: widget.userId,
+              timeLimit: item.timeLimit,
+            ),
           ),
         );
 
@@ -278,15 +291,19 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
               ),
               alignment: Alignment.center,
               child: item.isCompleted
-                  ? Icon(trailingIcon, color: Colors.white, size: 28) // Hiện Tick xanh hoặc X đỏ
+                  ? Icon(
+                      trailingIcon,
+                      color: Colors.white,
+                      size: 28,
+                    ) // Hiện Tick xanh hoặc X đỏ
                   : Text(
-                index.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                      index.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
             const SizedBox(width: 16),
 
@@ -302,6 +319,8 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -317,14 +336,24 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
                     children: [
                       Text(
                         "${item.totalQuestions} câu",
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(width: 12),
-                      Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
+                      Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Colors.grey.shade500,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         "${item.timeLimit}p",
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
                       ),
                       const Spacer(),
                       const Icon(Icons.star, size: 16, color: Colors.amber),
@@ -392,7 +421,7 @@ class _PracticeListScreenState extends State<PracticeListScreen> {
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
-                    )
+                    ),
                 ],
               ),
             ),

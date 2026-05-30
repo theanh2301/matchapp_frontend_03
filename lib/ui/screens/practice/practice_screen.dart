@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/models/practice_model.dart';
 import '../../../data/models/practice_list_model.dart';
 import '../../../data/services/practice_service.dart';
+import '../../utils/responsive.dart';
 
 class PracticeScreen extends StatefulWidget {
   final int userId;
@@ -46,6 +47,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = Responsive.horizontalPadding(context);
+
     return Scaffold(
       backgroundColor: AppColors.bgLight,
       body: SingleChildScrollView(
@@ -61,254 +64,245 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   bottomRight: Radius.circular(30),
                 ),
               ),
-              padding: const EdgeInsets.only(
-                top: 60,
-                left: 24,
-                right: 24,
+              padding: EdgeInsets.only(
+                top: Responsive.headerTopPadding(context),
+                left: horizontalPadding,
+                right: horizontalPadding,
                 bottom: 40,
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Luyện tập",
-                    style: TextStyle(
-                      color: AppColors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+              child: Responsive.centered(
+                context: context,
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Luyện tập",
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    "Rèn luyện kỹ năng giải toán",
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
-                ],
+                    SizedBox(height: 4),
+                    Text(
+                      "Rèn luyện kỹ năng giải toán",
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                  ],
+                ),
               ),
             ),
             Transform.translate(
               offset: const Offset(0, -20),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FutureBuilder<AllPracticeStatsModel>(
-                      future: _allStatsFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(40.0),
-                              child: CircularProgressIndicator(),
-                            ),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: Responsive.centered(
+                  context: context,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FutureBuilder<AllPracticeStatsModel>(
+                        future: _allStatsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(40.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Center(
+                              child: Text("Lỗi: ${snapshot.error}"),
+                            );
+                          } else if (!snapshot.hasData) {
+                            return const SizedBox();
+                          }
+
+                          final allData = snapshot.data!;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildChallengeCard(
+                                context: context,
+                                practiceType: 'DAILY',
+                                statsData: allData.dailyStats,
+                                icon: Icons.calendar_today,
+                                iconBgColor: AppColors.orange,
+                                title: "Luyện theo ngày",
+                                subtitle: "Học đều đặn mỗi ngày để tiến bộ",
+                                themeColor: AppColors.orange,
+                              ),
+                              const SizedBox(height: 16),
+                              _buildChallengeCard(
+                                context: context,
+                                practiceType: 'TOPIC',
+                                statsData: allData.topicStats,
+                                icon: Icons.adjust,
+                                iconBgColor: AppColors.primary,
+                                title: "Luyện theo chủ đề",
+                                subtitle: "Rèn luyện chuyên sâu từng chủ đề",
+                                themeColor: AppColors.primary,
+                              ),
+                              const SizedBox(height: 16),
+                              _buildChallengeCard(
+                                context: context,
+                                practiceType: 'CHALLENGE',
+                                statsData: allData.challengeStats,
+                                icon: Icons.emoji_events,
+                                iconBgColor: AppColors.purple,
+                                title: "Thử thách",
+                                subtitle: "Thách thức bản thân với các đề khó",
+                                themeColor: AppColors.purple,
+                              ),
+                            ],
                           );
-                        } else if (snapshot.hasError) {
-                          return Center(child: Text("Lỗi: ${snapshot.error}"));
-                        } else if (!snapshot.hasData) {
-                          return const SizedBox();
-                        }
+                        },
+                      ),
+                      const SizedBox(height: 32),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.query_stats,
+                            color: Colors.red.shade400,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            "Đề cần cải thiện",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      FutureBuilder<List<PracticeListModel>>(
+                        future: _weakTestsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(20.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Center(
+                              child: Text(
+                                "Lỗi tải dữ liệu: ${snapshot.error}",
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            );
+                          } else if (!snapshot.hasData ||
+                              snapshot.data!.isEmpty) {
+                            return Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.green.shade200,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.check_circle_outline,
+                                    size: 40,
+                                    color: Colors.green.shade400,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "Tuyệt vời! Bạn không có đề nào dưới mức trung bình.",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.green.shade700,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
 
-                        final allData = snapshot.data!;
-
-                        return Column(
+                          return Column(
+                            children: snapshot.data!
+                                .map(
+                                  (practice) => Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: 16.0,
+                                    ),
+                                    child: WeakPracticeCard(
+                                      practice: practice,
+                                      userId: widget.userId,
+                                      onRefresh: _refreshData,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF8E44AD), Color(0xFFB03A2E)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildChallengeCard(
-                              context: context,
-                              practiceType: 'DAILY',
-                              statsData: allData.dailyStats,
-                              icon: Icons.calendar_today,
-                              iconBgColor: AppColors.orange,
-                              title: "Luyện theo ngày",
-                              subtitle: "Học đều đặn mỗi ngày để tiến bộ",
-                              themeColor: AppColors.orange,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildChallengeCard(
-                              context: context,
-                              practiceType: 'TOPIC',
-                              statsData: allData.topicStats,
-                              icon: Icons.adjust,
-                              iconBgColor: AppColors.primary,
-                              title: "Luyện theo chủ đề",
-                              subtitle: "Rèn luyện chuyên sâu từng chủ đề",
-                              themeColor: AppColors.primary,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildChallengeCard(
-                              context: context,
-                              practiceType: 'CHALLENGE',
-                              statsData: allData.challengeStats,
-                              icon: Icons.emoji_events,
-                              iconBgColor: AppColors.purple,
-                              title: "Thử thách",
-                              subtitle: "Thách thức bản thân với các đề khó",
-                              themeColor: AppColors.purple,
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.query_stats,
-                          color: Colors.red.shade400,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          "Đề cần cải thiện",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    FutureBuilder<List<PracticeListModel>>(
-                      future: _weakTestsFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(20.0),
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        } else if (snapshot.hasError) {
-                          return Center(
-                            child: Text(
-                              "Lỗi tải dữ liệu: ${snapshot.error}",
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          );
-                        } else if (!snapshot.hasData ||
-                            snapshot.data!.isEmpty) {
-                          return Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.green.shade200),
-                            ),
-                            child: Column(
+                            Row(
                               children: [
-                                Icon(
-                                  Icons.check_circle_outline,
-                                  size: 40,
-                                  color: Colors.green.shade400,
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.psychology,
+                                    color: AppColors.white,
+                                    size: 24,
+                                  ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  "Tuyệt vời! Bạn không có đề nào dưới mức trung bình.",
-                                  textAlign: TextAlign.center,
+                                const SizedBox(width: 12),
+                                const Text(
+                                  "AI gợi ý luyện tập",
                                   style: TextStyle(
-                                    color: Colors.green.shade700,
+                                    color: AppColors.white,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             ),
-                          );
-                        }
-
-                        return Column(
-                          children: snapshot.data!
-                              .map(
-                                (practice) => Padding(
-                              padding: const EdgeInsets.only(bottom: 16.0),
-                              child: WeakPracticeCard(
-                                practice: practice,
-                                userId: widget.userId,
-                                onRefresh: _refreshData,
+                            const SizedBox(height: 12),
+                            const Text(
+                              "Bạn nên luyện thêm Định lý Vi-et để nâng cao độ chính xác từ 65% lên 85%.",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                height: 1.5,
                               ),
                             ),
-                          )
-                              .toList(),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF8E44AD), Color(0xFFB03A2E)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                          ],
                         ),
-                        borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.psychology,
-                                  color: AppColors.white,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              const Text(
-                                "AI gợi ý luyện tập",
-                                style: TextStyle(
-                                  color: AppColors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            "Bạn nên luyện thêm Định lý Vi-et để nâng cao độ chính xác từ 65% lên 85%.",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.white,
-                                foregroundColor: AppColors.purple,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              onPressed: () {},
-                              child: const Text(
-                                "Bắt đầu luyện tập",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -385,16 +379,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.black87,
+                          Expanded(
+                            child: Text(
+                              title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black87,
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Icon(
                             Icons.chevron_right,
                             color: Colors.grey.shade400,
@@ -411,16 +409,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       ),
                       const SizedBox(height: 16),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            displayProgressText,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w500,
+                          Expanded(
+                            child: Text(
+                              displayProgressText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Text(
                             "${(displayProgressValue * 100).toInt()}%",
                             style: const TextStyle(
@@ -660,7 +662,7 @@ class _WeakPracticeCardState extends State<WeakPracticeCard> {
                                         question: mistake.questionContent,
                                         userAnswer: mistake.userAnswerContent,
                                         correctAnswer:
-                                        mistake.correctAnswerContent,
+                                            mistake.correctAnswerContent,
                                       );
                                     }).toList(),
                                   ),

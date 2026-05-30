@@ -1,54 +1,44 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../../core/constants/api_constants.dart';
-import '../models/lesson_model.dart';
+
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+
+import '../../core/constants/api_constants.dart';
+import '../demo/demo_data.dart';
+import '../models/lesson_model.dart';
 
 class LessonService {
   final String baseUrl = "${ApiConstants.baseUrl}/lessons";
 
-  Future<List<LessonModel>> getLessonsOverview(int userId, int chapterId) async {
+  Future<List<LessonModel>> getLessonsOverview(
+    int userId,
+    int chapterId,
+  ) async {
     try {
-      final Uri url = Uri.parse('$baseUrl/$chapterId?userId=$userId');
-      debugPrint("🚀 ĐANG GỌI API LESSONS: $url");
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/$chapterId?userId=$userId'),
+            headers: ApiConstants.getAuthHeaders(),
+          )
+          .timeout(ApiConstants.requestTimeout);
 
-      final response = await http.get(
-        url,
-        headers: ApiConstants.getAuthHeaders(),
-      ).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (response.body.isEmpty) {
-          debugPrint("⚠️ Server trả về body rỗng (chưa có bài học nào).");
-          return [];
-        }
-
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          response.body.isNotEmpty) {
         final dynamic decodedData = jsonDecode(utf8.decode(response.bodyBytes));
-        debugPrint("🚀 Call lesson successfully");
+        final rawList = decodedData is Map<String, dynamic>
+            ? (decodedData['data'] ?? decodedData['result'])
+            : decodedData;
 
-        if (decodedData is List) {
-          return decodedData.map((item) =>
-              LessonModel.fromJson(item as Map<String, dynamic>)).toList();
-        } else if (decodedData is Map<String, dynamic>) {
-          if (decodedData.containsKey('data') && decodedData['data'] is List) {
-            return (decodedData['data'] as List).map((item) =>
-                LessonModel.fromJson(item as Map<String, dynamic>)).toList();
-          } else if (decodedData.containsKey('result') &&
-              decodedData['result'] is List) {
-            return (decodedData['result'] as List).map((item) =>
-                LessonModel.fromJson(item as Map<String, dynamic>)).toList();
-          } else {
-            throw Exception("Không tìm thấy danh sách bài học trong Object.");
-          }
-        } else {
-          throw Exception("Định dạng dữ liệu lạ.");
+        if (rawList is List) {
+          return rawList
+              .map((item) => LessonModel.fromJson(item as Map<String, dynamic>))
+              .toList();
         }
-      } else {
-        throw Exception("Lỗi server ${response.statusCode}: ${response.body}");
       }
     } catch (e) {
-      debugPrint("❌ LỖI LẤY LESSON: $e");
-      throw Exception("Lỗi xử lý: $e");
+      debugPrint('Lessons offline fallback: $e');
     }
+
+    return DemoData.lessons();
   }
 }

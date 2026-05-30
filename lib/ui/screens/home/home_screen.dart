@@ -7,6 +7,7 @@ import '../../../data/services/subject_service.dart';
 // Import Model & Service cho Daily Challenge
 import '../../../data/models/daily_challenge_model.dart';
 import '../../../data/services/daily_challenge_service.dart';
+import '../../utils/responsive.dart';
 
 class HomeScreen extends StatefulWidget {
   final int userId;
@@ -47,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = Responsive.horizontalPadding(context);
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SingleChildScrollView(
@@ -56,7 +58,12 @@ class _HomeScreenState extends State<HomeScreen> {
             // 1. HEADER (Phần màu xanh dương trên cùng)
             // ==========================================
             Container(
-              padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 30),
+              padding: EdgeInsets.only(
+                top: Responsive.headerTopPadding(context),
+                left: horizontalPadding,
+                right: horizontalPadding,
+                bottom: 30,
+              ),
               decoration: const BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.only(
@@ -64,70 +71,131 @@ class _HomeScreenState extends State<HomeScreen> {
                   bottomRight: Radius.circular(30),
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Xin chào, ${widget.userName}! 👋",
-                            style: const TextStyle(color: AppColors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "${widget.className} • Sẵn sàng học chưa?",
-                            style: const TextStyle(color: Colors.white70, fontSize: 14),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                        child: const Icon(Icons.chat_bubble_outline, color: AppColors.white),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Thẻ Streak & XP
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    decoration: BoxDecoration(color: AppColors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Responsive.centered(
+                context: context,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(color: AppColors.orange, shape: BoxShape.circle),
-                              child: const Icon(Icons.local_fire_department, color: AppColors.white, size: 24),
-                            ),
-                            const SizedBox(width: 12),
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("7 ngày", style: TextStyle(color: AppColors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                                Text("Chuỗi học liên tiếp", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                              ],
-                            ),
-                          ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Xin chào, ${widget.userName}! 👋",
+                                style: const TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "${widget.className} • Sẵn sàng học chưa?",
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text("450 XP", style: TextStyle(color: AppColors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                            Text("Điểm hôm nay", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                          ],
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.chat_bubble_outline,
+                            color: AppColors.white,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+
+                    // Thẻ Streak & XP
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        runSpacing: 16,
+                        spacing: 24,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.orange,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.local_fire_department,
+                                  color: AppColors.white,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "7 ngày",
+                                    style: TextStyle(
+                                      color: AppColors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Chuỗi học liên tiếp",
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                "450 XP",
+                                style: TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                "Điểm hôm nay",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -136,106 +204,156 @@ class _HomeScreenState extends State<HomeScreen> {
             // ==========================================
             Container(
               color: AppColors.bgLight,
-              padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Thẻ Mục tiêu hôm nay (Tích hợp API Daily Challenges)
-                  FutureBuilder<List<DailyChallengeModel>>(
-                    future: _challengesFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
+              padding: EdgeInsets.only(
+                top: 20,
+                left: horizontalPadding,
+                right: horizontalPadding,
+                bottom: 0,
+              ),
+              child: Responsive.centered(
+                context: context,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Thẻ Mục tiêu hôm nay (Tích hợp API Daily Challenges)
+                    FutureBuilder<List<DailyChallengeModel>>(
+                      future: _challengesFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return _buildChallengeCardContainer(
+                            child: const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(20),
+                                child: CircularProgressIndicator(
+                                  color: AppColors.orange,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          return _buildChallengeCardContainer(
+                            child: Text(
+                              "Lỗi tải thử thách: ${snapshot.error}",
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          );
+                        }
+
+                        final challenges = snapshot.data ?? [];
+                        // Tính toán số task đã hoàn thành
+                        final int completedCount = challenges
+                            .where((c) => c.isCompleted)
+                            .length;
+                        final int totalCount = challenges.length;
+
                         return _buildChallengeCardContainer(
-                          child: const Center(
-                            child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: AppColors.orange)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Expanded(
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.emoji_events,
+                                          color: Color(0xFFE64A19),
+                                          size: 24,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            "Thử thách hàng ngày",
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      "$completedCount/$totalCount hoàn thành",
+                                      style: const TextStyle(
+                                        color: Color(0xFFE64A19),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+
+                              if (challenges.isEmpty)
+                                const Text(
+                                  "Hôm nay chưa có thử thách nào.",
+                                  style: TextStyle(color: Colors.grey),
+                                )
+                              else
+                                // Render danh sách động từ API
+                                ...challenges.map((challenge) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: _buildDailyTaskItem(
+                                      title: challenge.title,
+                                      subtitle: challenge
+                                          .description, // Dùng description làm subtitle cho rõ nghĩa
+                                      xp: "+${challenge.xpReward} XP",
+                                      isCompleted: challenge.isCompleted,
+                                    ),
+                                  );
+                                }).toList(), // Cần gọi .toList() vì map() trả về Iterable
+                            ],
                           ),
                         );
-                      }
+                      },
+                    ),
+                    const SizedBox(height: 24),
 
-                      if (snapshot.hasError) {
-                        return _buildChallengeCardContainer(
-                          child: Text("Lỗi tải thử thách: ${snapshot.error}", style: const TextStyle(color: Colors.red)),
-                        );
-                      }
-
-                      final challenges = snapshot.data ?? [];
-                      // Tính toán số task đã hoàn thành
-                      final int completedCount = challenges.where((c) => c.isCompleted).length;
-                      final int totalCount = challenges.length;
-
-                      return _buildChallengeCardContainer(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Row(
-                                  children: [
-                                    Icon(Icons.emoji_events, color: Color(0xFFE64A19), size: 24),
-                                    SizedBox(width: 8),
-                                    Text("Thử thách hàng ngày", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
-                                  ],
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(12)),
-                                  child: Text(
-                                    "$completedCount/$totalCount hoàn thành",
-                                    style: const TextStyle(color: Color(0xFFE64A19), fontSize: 12, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-
-                            if (challenges.isEmpty)
-                              const Text("Hôm nay chưa có thử thách nào.", style: TextStyle(color: Colors.grey))
-                            else
-                            // Render danh sách động từ API
-                              ...challenges.map((challenge) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 16),
-                                  child: _buildDailyTaskItem(
-                                    title: challenge.title,
-                                    subtitle: challenge.description, // Dùng description làm subtitle cho rõ nghĩa
-                                    xp: "+${challenge.xpReward} XP",
-                                    isCompleted: challenge.isCompleted,
-                                  ),
-                                );
-                              }).toList(), // Cần gọi .toList() vì map() trả về Iterable
-                          ],
+                    // 2 Nút Hành động nhanh
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildQuickActionCard(
+                            title: "Học bài mới",
+                            subtitle: "12 bài đang chờ",
+                            icon: Icons.psychology,
+                            color: AppColors.green,
+                            onTap: widget.onNavigateToLearn,
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // 2 Nút Hành động nhanh
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildQuickActionCard(
-                          title: "Học bài mới",
-                          subtitle: "12 bài đang chờ",
-                          icon: Icons.psychology,
-                          color: AppColors.green,
-                          onTap: widget.onNavigateToLearn,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildQuickActionCard(
+                            title: "Luyện tập",
+                            subtitle: "8 bài tập mới",
+                            icon: Icons.bolt,
+                            color: AppColors.purple,
+                            onTap: widget.onNavigateToPractice,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildQuickActionCard(
-                          title: "Luyện tập",
-                          subtitle: "8 bài tập mới",
-                          icon: Icons.bolt,
-                          color: AppColors.purple,
-                          onTap: widget.onNavigateToPractice,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -243,100 +361,160 @@ class _HomeScreenState extends State<HomeScreen> {
             // 3. PHẦN CUỐI (Tích hợp API Môn học)
             // ==========================================
             Container(
-              padding: const EdgeInsets.only(top: 24, left: 20, right: 20, bottom: 40),
+              padding: EdgeInsets.only(
+                top: 24,
+                left: horizontalPadding,
+                right: horizontalPadding,
+                bottom: 40,
+              ),
               decoration: const BoxDecoration(color: AppColors.bgLight),
-              child: Column(
-                children: [
-                  // Khối trắng "Tiếp tục học"
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(20)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text("Tiếp tục học", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            Icon(Icons.trending_up, color: AppColors.primary),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        FutureBuilder<List<SubjectProgressModel>>(
-                          future: _progressFuture,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(child: Padding(padding: EdgeInsets.all(20.0), child: CircularProgressIndicator()));
-                            } else if (snapshot.hasError) {
-                              return Center(child: Padding(padding: const EdgeInsets.all(20.0), child: Text("Lỗi tải dữ liệu", style: const TextStyle(color: Colors.red))));
-                            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return const Center(child: Padding(padding: EdgeInsets.all(20.0), child: Text("Bạn chưa có tiến độ học tập nào.")));
-                            }
-
-                            final progressList = snapshot.data!;
-                            return ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: progressList.length,
-                              separatorBuilder: (context, index) => const SizedBox(height: 12),
-                              itemBuilder: (context, index) {
-                                final item = progressList[index];
-                                final color = index % 2 == 0 ? AppColors.primary : AppColors.green;
-
-                                return _buildSubjectProgressCard(
-                                  item.subjectName.toUpperCase(),
-                                  item.chapterName,
-                                  item.lessonName,
-                                  item.completionPercent / 100,
-                                  color,
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Thẻ AI Gợi ý
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.pink, AppColors.purple],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+              child: Responsive.centered(
+                context: context,
+                child: Column(
+                  children: [
+                    // Khối trắng "Tiếp tục học"
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.3), borderRadius: BorderRadius.circular(16)),
-                          child: const Icon(Icons.smart_toy_outlined, color: Colors.white, size: 32),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("AI gợi ý cho bạn", style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                              const SizedBox(height: 4),
                               Text(
-                                "Bạn nên ôn lại Hệ phương trình vì độ chính xác giảm 15% so với tuần trước.",
-                                style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13, height: 1.4),
+                                "Tiếp tục học",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
+                              Icon(Icons.trending_up, color: AppColors.primary),
                             ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+
+                          FutureBuilder<List<SubjectProgressModel>>(
+                            future: _progressFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(20.0),
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              } else if (snapshot.hasError) {
+                                return Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20.0),
+                                    child: Text(
+                                      "Lỗi tải dữ liệu",
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                );
+                              } else if (!snapshot.hasData ||
+                                  snapshot.data!.isEmpty) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(20.0),
+                                    child: Text(
+                                      "Bạn chưa có tiến độ học tập nào.",
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final progressList = snapshot.data!;
+                              return ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: progressList.length,
+                                separatorBuilder: (context, index) =>
+                                    const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  final item = progressList[index];
+                                  final color = index % 2 == 0
+                                      ? AppColors.primary
+                                      : AppColors.green;
+
+                                  return _buildSubjectProgressCard(
+                                    item.subjectName.toUpperCase(),
+                                    item.chapterName,
+                                    item.lessonName,
+                                    item.completionPercent / 100,
+                                    color,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 20),
+
+                    // Thẻ AI Gợi ý
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.pink, AppColors.purple],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.smart_toy_outlined,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "AI gợi ý cho bạn",
+                                  style: TextStyle(
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Bạn nên ôn lại Hệ phương trình vì độ chính xác giảm 15% so với tuần trước.",
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 13,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -358,7 +536,11 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
       child: child,
@@ -404,7 +586,11 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(width: 8),
         Text(
           xp,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.amber.shade700),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.amber.shade700,
+          ),
         ),
       ],
     );
@@ -427,20 +613,42 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.3), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Icon(icon, color: Colors.white, size: 24),
               ),
               const SizedBox(height: 12),
-              Text(title, style: const TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ),
@@ -448,7 +656,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSubjectProgressCard(String tag, String title, String subtitle, double progress, Color tagColor) {
+  Widget _buildSubjectProgressCard(
+    String tag,
+    String title,
+    String subtitle,
+    double progress,
+    Color tagColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -463,21 +677,46 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: tagColor.withOpacity(0.2), borderRadius: BorderRadius.circular(6)),
-                  child: Text(tag, style: TextStyle(color: tagColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: tagColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    tag,
+                    style: TextStyle(
+                      color: tagColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
+                Text(
+                  subtitle,
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                ),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text("${(progress * 100).toInt()}%", style: TextStyle(fontWeight: FontWeight.bold, color: tagColor)),
+              Text(
+                "${(progress * 100).toInt()}%",
+                style: TextStyle(fontWeight: FontWeight.bold, color: tagColor),
+              ),
               const SizedBox(height: 8),
               SizedBox(
                 width: 60,

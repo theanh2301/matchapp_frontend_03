@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/chapter_model.dart';
 import '../../../data/services/chapter_service.dart';
+import '../../widget/global_ai_chat_button.dart';
 import 'lesson_list_screen.dart';
 
 class ChapterListScreen extends StatefulWidget {
@@ -30,7 +31,7 @@ class ChapterListScreen extends StatefulWidget {
     required this.subjectIcon,
     required this.totalLessons,
     required this.userId,
-    required this.gradeId
+    required this.gradeId,
   });
 
   @override
@@ -56,7 +57,10 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
     });
 
     try {
-      final result = await _learnService.getChaptersOverview(widget.userId, widget.subjectId);
+      final result = await _learnService.getChaptersOverview(
+        widget.userId,
+        widget.subjectId,
+      );
 
       if (mounted) {
         setState(() {
@@ -73,10 +77,15 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgLight,
+      floatingActionButton: GlobalAiChatButton(
+        userId: widget.userId,
+        chatContext: 'Chapter list. Subject: ${widget.subjectName}.',
+      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,14 +99,22 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [widget.themeColor, widget.themeColor.withOpacity(0.8)],
+                  colors: [
+                    widget.themeColor,
+                    widget.themeColor.withOpacity(0.8),
+                  ],
                 ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),
                 ),
               ),
-              padding: const EdgeInsets.only(top: 50, left: 16, right: 24, bottom: 30),
+              padding: const EdgeInsets.only(
+                top: 50,
+                left: 16,
+                right: 24,
+                bottom: 30,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -111,15 +128,32 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(widget.subjectIcon, color: AppColors.white.withOpacity(0.5), size: 48),
+                        Icon(
+                          widget.subjectIcon,
+                          color: AppColors.white.withOpacity(0.5),
+                          size: 48,
+                        ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(widget.subjectName, style: const TextStyle(color: AppColors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                              Text(
+                                widget.subjectName,
+                                style: const TextStyle(
+                                  color: AppColors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               const SizedBox(height: 4),
-                              Text(widget.progressText, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                              Text(
+                                widget.progressText,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -134,7 +168,9 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
                       child: LinearProgressIndicator(
                         value: widget.progressValue,
                         backgroundColor: Colors.white.withOpacity(0.3),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.white,
+                        ),
                         minHeight: 8,
                       ),
                     ),
@@ -145,31 +181,64 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                           child: Row(
                             children: [
-                              const Icon(Icons.star, color: Colors.yellowAccent, size: 16),
+                              const Icon(
+                                Icons.star,
+                                color: Colors.yellowAccent,
+                                size: 16,
+                              ),
                               const SizedBox(width: 6),
-                              Text("${widget.earnedXP}/${widget.totalXP} XP", style: const TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                              Text(
+                                "${widget.earnedXP}/${widget.totalXP} XP",
+                                style: const TextStyle(
+                                  color: AppColors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         const SizedBox(width: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                           child: Row(
                             children: [
-                              const Icon(Icons.menu_book, color: Colors.white, size: 16),
+                              const Icon(
+                                Icons.menu_book,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                               const SizedBox(width: 6),
-                              Text("${widget.totalLessons} bài", style: const TextStyle(color: Colors.white, fontSize: 13)),
+                              Text(
+                                "${widget.totalLessons} bài",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -182,7 +251,14 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Danh sách chương", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                  const Text(
+                    "Danh sách chương",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   _buildChapterBody(), // Gọi hàm build nội dung
                 ],
@@ -199,7 +275,9 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
     if (_isLoading) {
       return Padding(
         padding: const EdgeInsets.only(top: 40),
-        child: Center(child: CircularProgressIndicator(color: widget.themeColor)),
+        child: Center(
+          child: CircularProgressIndicator(color: widget.themeColor),
+        ),
       );
     }
 
@@ -211,11 +289,17 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
             children: [
               Icon(Icons.wifi_off, size: 48, color: Colors.grey.shade400),
               const SizedBox(height: 16),
-              const Text("Không thể tải danh sách chương", style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                "Không thể tải danh sách chương",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               TextButton(
                 onPressed: _fetchChapters,
-                child: Text("Thử lại", style: TextStyle(color: widget.themeColor)),
-              )
+                child: Text(
+                  "Thử lại",
+                  style: TextStyle(color: widget.themeColor),
+                ),
+              ),
             ],
           ),
         ),
@@ -226,7 +310,10 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.only(top: 40),
-          child: Text("Chưa có chương nào trong môn học này.", style: TextStyle(color: Colors.grey.shade500)),
+          child: Text(
+            "Chưa có chương nào trong môn học này.",
+            style: TextStyle(color: Colors.grey.shade500),
+          ),
         ),
       );
     }
@@ -268,7 +355,9 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
     required Color themeColor,
     required ChapterModel data,
   }) {
-    double progressValue = totalLessons > 0 ? completedLessons / totalLessons : 0.0;
+    double progressValue = totalLessons > 0
+        ? completedLessons / totalLessons
+        : 0.0;
 
     return GestureDetector(
       onTap: () {
@@ -282,7 +371,7 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
               progressText: "$completedLessons/$totalLessons bài hoàn thành",
               themeColor: themeColor,
               userId: widget.userId,
-              gradeId: widget.gradeId
+              gradeId: widget.gradeId,
             ),
           ),
         );
@@ -293,7 +382,11 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
           color: AppColors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: Row(
@@ -302,9 +395,19 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
             Container(
               width: 54,
               height: 54,
-              decoration: BoxDecoration(color: themeColor, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(
+                color: themeColor,
+                borderRadius: BorderRadius.circular(16),
+              ),
               alignment: Alignment.center,
-              child: Text(number.toString(), style: const TextStyle(color: AppColors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+              child: Text(
+                number.toString(),
+                style: const TextStyle(
+                  color: AppColors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -314,20 +417,45 @@ class _ChapterListScreenState extends State<ChapterListScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87))),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
                       Icon(Icons.chevron_right, color: Colors.grey.shade400),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(subtitle, style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Text("$completedLessons/$totalLessons bài", style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+                      Text(
+                        "$completedLessons/$totalLessons bài",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
                       const SizedBox(width: 16),
                       const Icon(Icons.star, color: Colors.amber, size: 14),
                       const SizedBox(width: 4),
-                      Text("$earnedXP/$totalXP XP", style: TextStyle(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+                      Text(
+                        "$earnedXP/$totalXP XP",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
